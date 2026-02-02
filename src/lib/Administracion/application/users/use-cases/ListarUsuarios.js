@@ -4,7 +4,7 @@ class ListarUsuarios {
     }
 
     async execute() {
-        return this.usuarioRepository.listar();
+        return this.usuarioRepository.findAll();
     }
 }
 

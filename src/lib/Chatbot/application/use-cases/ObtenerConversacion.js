@@ -1,10 +1,12 @@
 class ObtenerConversacion {
     constructor(conversacionRepository) {
-        this.conversacionRepository = conversacionRepository;
+        this.repository = conversacionRepository;
     }
 
-    async execute(personaId, limite = 50) {
-        return this.conversacionRepository.obtenerHistorialPorPersona(personaId, limite);
+    async execute(id) {
+        const conversacion = await this.repository.findById(id);
+        if (!conversacion) throw new Error("Conversación no encontrada");
+        return conversacion;
     }
 }
 

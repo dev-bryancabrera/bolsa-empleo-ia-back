@@ -11,9 +11,17 @@ function buildApp() {
     const app = express();
 
     // Middlewares
-    app.use(cors());
+    // app.use(cors());
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
+
+    // CORS (opcional)
+    app.use((req, res, next) => {
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        next();
+    });
 
     // Health check
     app.get('/health/db', (req, res) => {

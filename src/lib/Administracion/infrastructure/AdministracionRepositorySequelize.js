@@ -1,80 +1,106 @@
-// Infrastructure/Repositories/UsuarioRepositorySequelize.js
-const UsuarioRepository = require('../domain/UsuarioRepository.js');
-const Usuario = require('../domain/Usuario.js');
-const UsuarioModel = require('../../../infrastructure/models/UsuarioModel.js');
+const bcrypt = require('bcryptjs');
+const UsuarioModel = require('../../../infrastructure/models/UsuarioModel');
+const PersonaModel = require('../../../infrastructure/models/PersonaModel');
+// Asegúrate de que la ruta a UsuarioModel sea la correcta
 
-class AdminsitracionRepositorySequelize extends UsuarioRepository {
-    async crear(usuario) {
-        const row = await UsuarioModel.create({
-            id_persona: usuario.id_persona,
-            email: usuario.email,
-            password: usuario.password,
-            rol: usuario.rol,
-            foto_perfil: usuario.foto_perfil,
-            estado: usuario.estado,
-        });
+class UsuarioRepositorySequelize {
 
-        return this._toEntity(row);
+    async findByEmail(email) {
+        try {
+            // Usamos directamente el modelo importado
+            const usuario = await UsuarioModel.findOne({
+                where: {
+                    email,
+                    activo: true // O 'estado', verifica cómo se llama en tu DB
+                }
+            });
+            return usuario;
+        } catch (error) {
+            throw new Error('Error al buscar usuario por email: ' + error.message);
+        }
     }
 
-    async obtenerPorId(id) {
-        const row = await UsuarioModel.findByPk(id);
-        if (!row) return null;
-        return this._toEntity(row);
+    async findAll() {
+        try {
+            const usuarios = await UsuarioModel.findAll({
+                where: { activo: true },
+                attributes: { exclude: ['password'] },
+                include: [{ model: PersonaModel, as: 'persona' }]
+            });
+
+            // Convertimos el array de instancias a objetos planos
+            return usuarios.map(usuario => usuario.get({ plain: true }));
+        } catch (error) {
+            throw new Error('Error al listar usuarios: ' + error.message);
+        }
     }
 
-    async obtenerPorEmail(email) {
-        const row = await UsuarioModel.findOne({ where: { email } });
-        if (!row) return null;
-        return this._toEntity(row);
+    async findById(id) {
+        try {
+            const usuario = await UsuarioModel.findOne({
+                where: { id, activo: true },
+                attributes: { exclude: ['password'] }
+            });
+            return usuario;
+        } catch (error) {
+            throw new Error('Error al buscar usuario: ' + error.message);
+        }
     }
 
-    async obtenerPorPersonaId(personaId) {
-        const row = await UsuarioModel.findOne({ where: { id_persona: personaId } });
-        if (!row) return null;
-        return this._toEntity(row);
+    async findByIdWithPersona(id) {
+        try {
+            // Si necesitas el modelo Persona para el include, impórtalo aquí
+            const PersonaModel = require('../../../infrastructure/models/PersonaModel');
+
+            const usuario = await UsuarioModel.findOne({
+                where: { id, activo: true },
+                attributes: { exclude: ['password'] },
+                include: [{
+                    model: PersonaModel,
+                    as: 'persona'
+                }]
+            });
+
+            return usuario;
+        } catch (error) {
+            throw new Error('Error al buscar usuario con persona: ' + error.message);
+        }
     }
 
-    async listar() {
-        const rows = await UsuarioModel.findAll();
-        return rows.map((row) => this._toEntity(row));
+    async create(usuarioData) {
+        try {
+            const hashedPassword = await bcrypt.hash(usuarioData.password, 10);
+
+            const row = await UsuarioModel.create({
+                ...usuarioData,
+                password: hashedPassword
+            });
+
+            const { password, ...usuarioSinPassword } = row.toJSON();
+            return usuarioSinPassword;
+        } catch (error) {
+            if (error.name === 'SequelizeUniqueConstraintError') {
+                throw new Error('El email ya está registrado');
+            }
+            throw new Error('Error al crear usuario: ' + error.message);
+        }
     }
 
-    async actualizar(id, datosUsuario) {
-        const row = await UsuarioModel.findByPk(id);
-        if (!row) return null;
+    async update(id, usuarioData) {
+        try {
+            if (usuarioData.password) {
+                usuarioData.password = await bcrypt.hash(usuarioData.password, 10);
+            }
 
-        await row.update({
-            id_persona: datosUsuario.id_persona,
-            email: datosUsuario.email,
-            password: datosUsuario.password,
-            rol: datosUsuario.rol,
-            foto_perfil: datosUsuario.foto_perfil,
-            estado: datosUsuario.estado,
-        });
+            await UsuarioModel.update(usuarioData, {
+                where: { id, activo: true }
+            });
 
-        return this._toEntity(row);
-    }
-
-    async eliminar(id) {
-        const row = await UsuarioModel.findByPk(id);
-        if (!row) return false;
-        await row.destroy();
-        return true;
-    }
-
-    _toEntity(row) {
-        return new Usuario({
-            id: row.id,
-            id_persona: row.id_persona,
-            email: row.email,
-            password: row.password,
-            rol: row.rol,
-            foto_perfil: row.foto_perfil,
-            estado: row.estado,
-            created_at: row.created_at,
-        });
+            return await this.findById(id);
+        } catch (error) {
+            throw new Error('Error al actualizar usuario: ' + error.message);
+        }
     }
 }
 
-module.exports = AdminsitracionRepositorySequelize;
+module.exports = UsuarioRepositorySequelize;

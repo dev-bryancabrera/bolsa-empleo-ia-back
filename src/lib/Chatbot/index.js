@@ -2,10 +2,10 @@ const ConversacionRepositorySequelize = require('./infrastructure/ConversacionRe
 const GeminiService = require('../../infrastructure/services/GroqService');
 
 // Casos de Uso
-const EnviarMensaje = require('./application/gemini/use-cases/EnviarMensaje');
-const ListarConversacion = require('./application/gemini/use-cases/ListarConversacion');
-const ObtenerConversacion = require('./application/gemini/use-cases/ObtenerConversacion');
-const EliminarConversacion = require('./application/gemini/use-cases/EliminarConversacion');
+const EnviarMensaje = require('./application/use-cases/EnviarMensaje');
+const ListarConversacion = require('./application/use-cases/ListarConversacion');
+const ObtenerConversacion = require('./application/use-cases/ObtenerConversacion');
+const EliminarConversacion = require('./application/use-cases/EliminarConversacion');
 
 const ConversacionController = require('./infrastructure/http/controller/ConversacionController');
 const ConversacionRoutes = require("./infrastructure/http/routes/conversacion.routes");

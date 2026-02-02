@@ -1,4 +1,4 @@
-const Usuario = require('../../domain/Usuario');
+const Usuario = require('../../../domain/Usuario');
 const bcrypt = require('bcrypt');
 
 class CrearUsuario {
@@ -9,7 +9,7 @@ class CrearUsuario {
 
     async execute(dto) {
         // Verificar si el email ya existe
-        const usuarioExistente = await this.usuarioRepository.obtenerPorEmail(dto.email);
+        const usuarioExistente = await this.usuarioRepository.findByEmail(dto.email);
         if (usuarioExistente) {
             throw new Error('El email ya está registrado');
         }
@@ -21,8 +21,9 @@ class CrearUsuario {
                 throw new Error('La persona no existe');
             }
 
-            const usuarioConPersona = await this.usuarioRepository.obtenerPorPersonaId(dto.id_persona);
-            if (usuarioConPersona) {
+            const usuarioConPersona = await this.usuarioRepository.findByIdWithPersona(dto.id_persona);
+
+            if (usuarioConPersona && usuarioConPersona.id_persona === dto.id_persona) {
                 throw new Error('Esta persona ya tiene un usuario asociado');
             }
         }
@@ -36,10 +37,10 @@ class CrearUsuario {
             password: passwordHash,
             rol: dto.rol ?? 'user',
             foto_perfil: dto.foto_perfil,
-            estado: dto.estado ?? true,
+            activo: dto.activo ?? true,
         });
 
-        return this.usuarioRepository.crear(usuario);
+        return this.usuarioRepository.create(usuario);
     }
 }
 

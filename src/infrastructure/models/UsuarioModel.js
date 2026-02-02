@@ -32,7 +32,7 @@ const UsuarioModel = db.define(
             type: DataTypes.STRING(255),
             allowNull: true,
         },
-        estado: {
+        activo: {
             type: DataTypes.BOOLEAN,
             allowNull: false,
             defaultValue: true,

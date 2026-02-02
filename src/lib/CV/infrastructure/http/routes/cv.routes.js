@@ -1,13 +1,16 @@
 const express = require('express');
 const router = express.Router();
 
+// Validacion middleware de token JWT
+const { auth } = require('../../../../../middleware/auth');
+
 module.exports = (cvController) => {
-    router.get('/', cvController.listar);
-    router.get('/:id', cvController.obtener);
-    router.get('/persona/:personaId', cvController.obtenerPorPersona);
-    router.post('/', cvController.crear);
-    router.put('/:id', cvController.actualizar);
-    router.delete('/:id', cvController.eliminar);
+    router.get('/', auth, cvController.listar);
+    router.get('/:id', auth, cvController.obtener);
+    router.get('/persona/:personaId', auth, cvController.obtenerPorPersona);
+    router.post('/', auth, cvController.crear);
+    router.put('/:id', auth, cvController.actualizar);
+    router.delete('/:id', auth, cvController.eliminar);
 
     return router;
 };

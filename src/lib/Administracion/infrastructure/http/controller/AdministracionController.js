@@ -1,12 +1,12 @@
 class AdministracionController {
-    constructor(
+    constructor({
         crearUsuario,
         listarUsuarios,
         obtenerUsuario,
         obtenerUsuarioPersona,
         actualizarUsuario,
         eliminarUsuario,
-    ) {
+    }) {
         this.crearUsuario = crearUsuario;
         this.listarUsuarios = listarUsuarios;
         this.obtenerUsuario = obtenerUsuario;

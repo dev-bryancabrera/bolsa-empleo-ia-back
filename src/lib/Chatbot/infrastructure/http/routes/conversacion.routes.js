@@ -1,22 +1,21 @@
 const express = require('express');
 const router = express.Router();
 
+// Validacion middleware de token JWT
+const { auth } = require('../../../../../middleware/auth');
+
 module.exports = (conversacionController) => {
     // Enviar un nuevo mensaje y obtener respuesta de la IA
-    // POST /api/chat
-    router.post('/', (req, res) => conversacionController.enviarMensaje(req, res));
+    router.post('/', auth, conversacionController.enviarMensaje);
 
     // Listar todo el historial de conversaciones
-    // GET /api/chat
-    router.get('/', (req, res) => conversacionController.listar(req, res));
+    router.get('/', auth, conversacionController.listar);
 
     // Obtener una conversación específica por su ID
-    // GET /api/chat/:id
-    router.get('/:id', (req, res) => conversacionController.obtener(req, res));
+    router.get('/:id', auth, conversacionController.obtener);
 
     // Eliminar una conversación (o limpiar historial)
-    // DELETE /api/chat/:id
-    router.delete('/:id', (req, res) => conversacionController.eliminar(req, res));
+    router.delete('/:id', auth, conversacionController.eliminar);
 
     return router;
 };

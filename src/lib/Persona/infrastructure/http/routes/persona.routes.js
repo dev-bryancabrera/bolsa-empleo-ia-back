@@ -5,7 +5,7 @@ const router = express.Router();
 const { auth } = require('../../../../../middleware/auth');
 
 module.exports = (personaController) => {
-    router.post('/', auth, personaController.crear);
+    router.post('/', personaController.crear);
     router.get('/', auth, personaController.listar);
     router.get('/:id', auth, personaController.obtener);
     router.put('/:id', auth, personaController.actualizar);

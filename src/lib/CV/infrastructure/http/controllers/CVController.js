@@ -1,12 +1,12 @@
 class CVController {
-    constructor(
+    constructor({
         crearCV,
         listarCVs,
         obtenerCV,
         obtenerCVPersona,
         actualizarCV,
         eliminarCV,
-    ) {
+    }) {
         this.crearCV = crearCV;
         this.listarCVs = listarCVs;
         this.obtenerCV = obtenerCV;

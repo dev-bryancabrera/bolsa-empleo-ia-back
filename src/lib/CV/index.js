@@ -1,5 +1,6 @@
 // Repository Sequelize CV
 const CVRepositorySequelize = require('./infrastructure/CVRepositorySequelize');
+const PersonaRepositorySequelize = require('../Persona/infrastructure/PersonaRepositorySequelize');
 
 // Casos de uso CV
 const CrearCV = require('./application/use-cases/cv/CrearCV');
@@ -37,11 +38,12 @@ module.exports = function registerCVModule(app) {
 
     // Infraestructura CV
     const cvRepository = new CVRepositorySequelize();
+    const personaRepository = new PersonaRepositorySequelize();
 
     // Casos de uso CV
-    const crearCV = new CrearCV(cvRepository);
-    const actualizarCV = new ActualizarCV(cvRepository);
-    const eliminarCV = new EliminarCV(cvRepository);
+    const crearCV = new CrearCV(cvRepository, personaRepository);
+    const actualizarCV = new ActualizarCV(cvRepository, personaRepository);
+    const eliminarCV = new EliminarCV(cvRepository, personaRepository);
     const listarCV = new ListarCV(cvRepository);
     const obtenerCVPersona = new ObtenerCVPersona(cvRepository);
     const obtenerCV = new ObtenerCV(cvRepository);

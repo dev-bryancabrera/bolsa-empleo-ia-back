@@ -9,6 +9,7 @@ class CrearPersona {
         const persona = new Persona({
             nombre: dto.nombre,
             apellido: dto.apellido,
+            identificacion: dto.identificacion,
             telefono: dto.telefono,
             fecha_nacimiento: dto.fecha_nacimiento,
             direccion: dto.direccion,

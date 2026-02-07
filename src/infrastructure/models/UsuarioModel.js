@@ -29,7 +29,7 @@ const UsuarioModel = db.define(
             defaultValue: 'user',
         },
         foto_perfil: {
-            type: DataTypes.STRING(255),
+            type: DataTypes.BLOB('long'),
             allowNull: true,
         },
         activo: {

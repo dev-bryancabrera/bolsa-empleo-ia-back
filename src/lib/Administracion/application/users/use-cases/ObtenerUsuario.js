@@ -4,7 +4,7 @@ class ObtenerUsuario {
     }
 
     async execute(id) {
-        return this.usuarioRepository.obtenerPorId(id);
+        return this.usuarioRepository.findById(id);
     }
 }
 

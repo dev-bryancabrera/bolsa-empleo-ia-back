@@ -1,10 +1,10 @@
-class ObtenerUsuarioPersona {
+class ObtenerPersonaPorUsuario {
     constructor(usuarioRepository) {
         this.usuarioRepository = usuarioRepository;
     }
 
-    async execute(personaId) {
-        const usuario = await this.usuarioRepository.findByIdWithPersona(personaId);
+    async execute(userId) {
+        const usuario = await this.usuarioRepository.findPersonByUserId(userId);
         if (!usuario) {
             throw new Error('No se encontró usuario para esta persona');
         }
@@ -12,4 +12,4 @@ class ObtenerUsuarioPersona {
     }
 }
 
-module.exports = ObtenerUsuarioPersona;
+module.exports = ObtenerPersonaPorUsuario;

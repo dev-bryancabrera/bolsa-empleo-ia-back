@@ -18,6 +18,10 @@ const PersonaModel = db.define(
             type: DataTypes.STRING(100),
             allowNull: false,
         },
+        identificacion: {
+            type: DataTypes.STRING(10),
+            allowNull: false,
+        },
         telefono: {
             type: DataTypes.STRING(20),
             allowNull: true,

@@ -1,4 +1,4 @@
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 const UsuarioModel = require('../../../infrastructure/models/UsuarioModel');
 const PersonaModel = require('../../../infrastructure/models/PersonaModel');
 // Asegúrate de que la ruta a UsuarioModel sea la correcta
@@ -67,8 +67,40 @@ class UsuarioRepositorySequelize {
         }
     }
 
+    async findPersonByUserId(id) {
+        try {
+            const PersonaModel = require('../../../infrastructure/models/PersonaModel');
+
+            const usuario = await UsuarioModel.findOne({
+                where: {
+                    id: id, // El ID del usuario
+                    activo: true
+                },
+                attributes: {
+                    exclude: ['password']
+                },
+                include: [{
+                    model: PersonaModel,
+                    as: 'persona', // Debe ser igual con el 'as' definido en la asociación del modelo
+                    required: true // Esto hace un INNER JOIN, solo trae si tiene datos de persona
+                }]
+            });
+
+            if (!usuario) {
+                return null;
+            }
+
+            // Retornamos el objeto plano de Sequelize
+            return usuario.get({ plain: true });
+
+        } catch (error) {
+            throw new Error('Error al buscar usuario con persona: ' + error.message);
+        }
+    }
+
     async create(usuarioData) {
         try {
+            // Encripta la contraseña
             const hashedPassword = await bcrypt.hash(usuarioData.password, 10);
 
             const row = await UsuarioModel.create({

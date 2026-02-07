@@ -8,6 +8,7 @@ const ActualizarCV = require('./application/use-cases/cv/ActualizarCV');
 const EliminarCV = require('./application/use-cases/cv/EliminarCV');
 const ListarCV = require('./application/use-cases/cv/ListarCV');
 const ObtenerCVPersona = require('./application/use-cases/cv/ObtenerCVPersona');
+const ObtenerCVCompletoPorUsuario = require('./application/use-cases/cv/ObternerCVCompletoPorUsuario');
 const ObtenerCV = require('./application/use-cases/cv/ObtenerCV');
 
 // Controlador CV
@@ -46,6 +47,7 @@ module.exports = function registerCVModule(app) {
     const eliminarCV = new EliminarCV(cvRepository, personaRepository);
     const listarCV = new ListarCV(cvRepository);
     const obtenerCVPersona = new ObtenerCVPersona(cvRepository);
+    const obtenerCVCompletoPorUsuario = new ObtenerCVCompletoPorUsuario(cvRepository);
     const obtenerCV = new ObtenerCV(cvRepository);
 
     // Controller CV
@@ -54,6 +56,7 @@ module.exports = function registerCVModule(app) {
         listarCV,
         obtenerCV,
         obtenerCVPersona,
+        obtenerCVCompletoPorUsuario,
         actualizarCV,
         eliminarCV,
     });

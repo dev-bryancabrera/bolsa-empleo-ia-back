@@ -1,8 +1,8 @@
 const { DataTypes } = require('sequelize');
 const { db } = require('../database/ConnectMySQL');
 
-const ConversacionModel = db.define(
-    'Conversacion',
+const ChatModel = db.define(
+    'Chat',
     {
         id: {
             type: DataTypes.BIGINT,
@@ -13,31 +13,16 @@ const ConversacionModel = db.define(
             type: DataTypes.BIGINT,
             allowNull: false,
         },
-        chat_id: {
-            type: DataTypes.BIGINT,
-            allowNull: false,
-        },
-        mensaje: {
-            type: DataTypes.TEXT('long'),
-            allowNull: false,
-        },
-        respuesta: {
-            type: DataTypes.TEXT('long'),
+        titulo: {
+            type: DataTypes.STRING(255),
             allowNull: true,
         },
-        tipo: {
+        estado: {
             type: DataTypes.STRING(50),
-            allowNull: true,
+            allowNull: false,
+            defaultValue: 'activo',
         },
-        respuesta_chat: {
-            type: DataTypes.INTEGER,
-            allowNull: true,
-        },
-        json: {
-            type: DataTypes.INTEGER,
-            allowNull: true,
-        },
-        metadata: {
+        configuracion: {
             type: DataTypes.TEXT('long'),
             allowNull: true,
         },
@@ -46,16 +31,16 @@ const ConversacionModel = db.define(
             allowNull: false,
             defaultValue: DataTypes.NOW,
         },
-        update_at: {
+        updated_at: {
             type: DataTypes.DATE,
             allowNull: true,
         },
     },
     {
-        tableName: 'conversaciones',
+        tableName: 'chats',
         timestamps: false,
         underscored: true,
     }
 );
 
-module.exports = ConversacionModel;
+module.exports = ChatModel;

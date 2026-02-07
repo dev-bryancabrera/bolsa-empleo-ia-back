@@ -7,7 +7,7 @@ class ActualizarUsuario {
     }
 
     async execute(id, dto) {
-        const usuarioExistente = await this.usuarioRepository.obtenerPorId(id);
+        const usuarioExistente = await this.usuarioRepository.findById(id);
         if (!usuarioExistente) {
             throw new Error('Usuario no encontrado');
         }
@@ -31,11 +31,6 @@ class ActualizarUsuario {
             if (usuarioConPersona && usuarioConPersona.id !== id) {
                 throw new Error('Esta persona ya tiene un usuario asociado');
             }
-        }
-
-        // Si se está actualizando la contraseña, encriptarla
-        if (dto.password) {
-            dto.password = await bcrypt.hash(dto.password, 10);
         }
 
         return this.usuarioRepository.actualizar(id, dto);

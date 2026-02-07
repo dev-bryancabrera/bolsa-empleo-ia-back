@@ -4,13 +4,15 @@ class ActualizarPerfil {
     }
 
     async execute(usuarioId, datos) {
-        // Filtramos solo lo que permitimos actualizar al usuario
-        const { email, password, foto_perfil } = datos;
+        const { email, password } = datos;
         const dataToUpdate = {};
 
         if (email) dataToUpdate.email = email;
-        if (password) dataToUpdate.password = password; // Recuerda hashear si el repo no lo hace
-        if (foto_perfil) dataToUpdate.foto_perfil = foto_perfil;
+        if (password) dataToUpdate.password = password;
+
+        if (datos.foto_perfil) {
+            dataToUpdate.foto_perfil = datos.foto_perfil;
+        }
 
         return await this.usuarioRepository.update(usuarioId, dataToUpdate);
     }

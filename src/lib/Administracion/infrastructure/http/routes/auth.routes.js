@@ -10,8 +10,8 @@ module.exports = (authController) => {
 
     // Rutas protegidas Requieren el token válido
     router.get('/verificar-token', auth, authController.verificarToken);
-    router.get('/perfil', auth, authController.obtenerPerfil);
-    router.put('/perfil', auth, authController.actualizarPerfil);
+    router.get('/perfil/:idUser', auth, authController.obtenerPerfil);
+    router.put('/perfil/:idUser', auth, authController.actualizarPerfil);
 
     return router;
 };

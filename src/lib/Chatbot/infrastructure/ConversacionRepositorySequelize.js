@@ -1,3 +1,4 @@
+const { ChatModel } = require('../../../infrastructure/models');
 const ConversacionModel = require('../../../infrastructure/models/ConversacionModel');
 
 class ConversacionRepositorySequelize {
@@ -17,10 +18,10 @@ class ConversacionRepositorySequelize {
     /**
      * Lista el historial por persona
      */
-    async findByPersona(personaId) {
+    async findByChat(chatId) {
         try {
-            return await ConversacionModel.findAll({
-                where: { persona_id: personaId },
+            return await ChatModel.findAll({
+                where: { chat_id: chatId },
                 order: [['created_at', 'ASC']]
             });
         } catch (error) {
@@ -45,6 +46,15 @@ class ConversacionRepositorySequelize {
             return true;
         }
         return false;
+    }
+
+    async listarPorChat(chatId) {
+        const conversaciones = await ConversacionModel.findAll({
+            where: { chat_id: chatId },
+            order: [['created_at', 'ASC']] // Ordenar por fecha de creación
+        });
+
+        return conversaciones.map(conv => conv.toJSON());
     }
 }
 

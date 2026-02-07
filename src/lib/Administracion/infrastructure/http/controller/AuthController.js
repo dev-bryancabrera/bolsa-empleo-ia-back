@@ -32,8 +32,8 @@ class AuthController {
 
     obtenerPerfil = async (req, res) => {
         try {
-            // Usamos el ID que el middleware 'auth' puso en req.usuario
-            const usuario = await this.obtenerPerfilUseCase.execute(req.usuario.id);
+            const idUsuario = req.params.idUser;
+            const usuario = await this.obtenerPerfilUseCase.execute(idUsuario);
             res.json({ usuario });
         } catch (error) {
             res.status(500).json({ error: error.message });
@@ -41,16 +41,26 @@ class AuthController {
     }
 
     actualizarPerfil = async (req, res) => {
-        try {
-            const resultado = await this.actualizarPerfilUseCase.execute(req.usuario.id, req.body);
-            res.json({
-                mensaje: 'Perfil actualizado exitosamente',
-                usuario: resultado
-            });
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
-    }
+        const { idUser } = req.params;
+        const { email, foto_perfil } = req.body;
+
+        const data = {
+            email,
+            foto_perfil: foto_perfil
+                ? Buffer.from(
+                    foto_perfil.replace(/^data:image\/\w+;base64,/, ''),
+                    'base64'
+                )
+                : null
+        };
+
+        const resultado = await this.actualizarPerfilUseCase.execute(idUser, data);
+
+        res.json({
+            mensaje: 'Perfil actualizado exitosamente',
+            usuario: resultado
+        });
+    };
 }
 
 module.exports = AuthController;

@@ -6,6 +6,7 @@ const CrearUsuario = require('./application/users/use-cases/CrearUsuario');
 const ListarUsuarios = require('./application/users/use-cases/ListarUsuarios');
 const ObtenerUsuario = require('./application/users/use-cases/ObtenerUsuario');
 const ObtenerUsuarioPersona = require('./application/users/use-cases/ObtenerUsuarioPersona');
+const ObtenerPersonaPorUsuario = require('./application/users/use-cases/ObtenerPersonaPorUsuario');
 const ActualizarUsuario = require('./application/users/use-cases/ActualizarUsuario');
 const EliminarUsuario = require('./application/users/use-cases/EliminarUsuario');
 
@@ -33,6 +34,7 @@ module.exports = function registerAdministracionModule(app) {
     const listarUsuarios = new ListarUsuarios(usuarioRepository);
     const obtenerUsuario = new ObtenerUsuario(usuarioRepository);
     const obtenerUsuarioPorPersona = new ObtenerUsuarioPersona(usuarioRepository);
+    const obtenerPersonaPorUsuario = new ObtenerPersonaPorUsuario(usuarioRepository);
     const actualizarUsuario = new ActualizarUsuario(usuarioRepository, personaRepository);
     const eliminarUsuario = new EliminarUsuario(usuarioRepository);
 
@@ -48,6 +50,7 @@ module.exports = function registerAdministracionModule(app) {
         listarUsuarios,
         obtenerUsuario,
         obtenerUsuarioPorPersona,
+        obtenerPersonaPorUsuario,
         actualizarUsuario,
         eliminarUsuario,
     });

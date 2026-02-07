@@ -4,6 +4,7 @@ class CVController {
         listarCVs,
         obtenerCV,
         obtenerCVPersona,
+        obtenerCVCompletoPorUsuario,
         actualizarCV,
         eliminarCV,
     }) {
@@ -11,6 +12,7 @@ class CVController {
         this.listarCVs = listarCVs;
         this.obtenerCV = obtenerCV;
         this.obtenerCVPersona = obtenerCVPersona;
+        this.obtenerCVCompletoPorUsuario = obtenerCVCompletoPorUsuario;
         this.actualizarCV = actualizarCV;
         this.eliminarCV = eliminarCV;
     }
@@ -45,6 +47,15 @@ class CVController {
     obtenerPorPersona = async (req, res, next) => {
         try {
             const cv = await this.obtenerCVPersona.execute(req.params.personaId);
+            res.status(200).json(cv);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    obtenerCVPorUsuario = async (req, res, next) => {
+        try {
+            const cv = await this.obtenerCVCompletoPorUsuario.execute(req.params.usuarioId);
             res.status(200).json(cv);
         } catch (error) {
             next(error);

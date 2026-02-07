@@ -1,6 +1,8 @@
-const CVRepository = require('../domain/cv/CVRepository.js');
-const CV = require('../domain/cv/CV.js');
-const CVModel = require('../../../infrastructure/models/CVModel.js');
+const CVRepository = require('../domain/cv/CVRepository');
+const CV = require('../domain/cv/CV');
+const CVModel = require('../../../infrastructure/models/CVModel');
+const HabilidadesModel = require('../../../infrastructure/models/HabilidadesModel');
+const { UsuarioModel, PersonaModel } = require('../../../infrastructure/models');
 
 class CVRepositorySequelize extends CVRepository {
     async crear(cv) {
@@ -23,12 +25,51 @@ class CVRepositorySequelize extends CVRepository {
         return this._toEntity(row);
     }
 
+    async findCVByUserId(usuarioId) {
+        const usuario = await UsuarioModel.findByPk(usuarioId, {
+            include: [
+                {
+                    model: PersonaModel,
+                    as: 'persona',
+                    include: [
+                        {
+                            model: CVModel,
+                            as: 'cv',
+                            include: [
+                                {
+                                    model: HabilidadesModel,
+                                    as: 'habilidades'
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        });
+
+        if (!usuario || !usuario.persona || !usuario.persona.cv) {
+            return null;
+        }
+
+        return usuario.persona.cv;
+    }
+
     async obtenerPorPersonaId(personaId) {
         const row = await CVModel.findOne({
             where: { persona_id: personaId }
         });
         if (!row) return null;
         return this._toEntity(row);
+    }
+
+    async obtenerHabilidades(cv_id) {
+        const rows = await HabilidadesModel.findAll({
+            where: { id_cv: cv_id }
+        });
+
+        if (!rows || rows.length === 0) return [];
+
+        return rows.map(row => this._habilidadToEntity(row));
     }
 
     async listar() {
@@ -72,6 +113,17 @@ class CVRepositorySequelize extends CVRepository {
             estado: row.estado,
             created_at: row.created_at,
         });
+    }
+
+    _habilidadToEntity(row) {
+        return {
+            id: row.id,
+            nombre: row.nombre,
+            categoria: row.categoria,
+            nivel: row.nivel,
+            anios_experiencia: row.anios_experiencia,
+            id_cv: row.id_cv
+        };
     }
 }
 

@@ -4,6 +4,7 @@ class AdministracionController {
         listarUsuarios,
         obtenerUsuario,
         obtenerUsuarioPersona,
+        obtenerPersonaPorUsuario,
         actualizarUsuario,
         eliminarUsuario,
     }) {
@@ -11,6 +12,7 @@ class AdministracionController {
         this.listarUsuarios = listarUsuarios;
         this.obtenerUsuario = obtenerUsuario;
         this.obtenerUsuarioPersona = obtenerUsuarioPersona;
+        this.obtenerPersonaPorUsuario = obtenerPersonaPorUsuario;
         this.actualizarUsuario = actualizarUsuario;
         this.eliminarUsuario = eliminarUsuario;
     }
@@ -62,6 +64,23 @@ class AdministracionController {
             next(error);
         }
     }
+
+    obtenerPersonaPorUsuarioId = async (req, res, next) => {
+        try {
+            const usuarioId = req.params.userId; // 🔥 viene del token
+
+            const usuario = await this.obtenerPersonaPorUsuario.execute(usuarioId);
+
+            if (!usuario) {
+                return res.status(404).json({ message: 'Usuario no encontrado' });
+            }
+
+            const { password, ...usuarioSinPassword } = usuario;
+            res.json(usuarioSinPassword);
+        } catch (error) {
+            next(error);
+        }
+    };
 
     actualizar = async (req, res, next) => {
         try {

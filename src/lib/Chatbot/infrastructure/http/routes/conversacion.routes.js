@@ -9,7 +9,12 @@ module.exports = (conversacionController) => {
     router.post('/', auth, conversacionController.enviarMensaje);
 
     // Listar todo el historial de conversaciones
-    router.get('/', auth, conversacionController.listar);
+    // router.get('/', auth, conversacionController.listar);
+
+    router.get('/chat/:idChat', auth, conversacionController.listarPorChat);
+
+    // Listar todo el historial de conversaciones
+    router.get('/persona/:idPersona', auth, conversacionController.listar);
 
     // Obtener una conversación específica por su ID
     router.get('/:id', auth, conversacionController.obtener);

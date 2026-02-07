@@ -27,14 +27,11 @@ class CrearUsuario {
                 throw new Error('Esta persona ya tiene un usuario asociado');
             }
         }
-
-        // Encriptar la contraseña
-        const passwordHash = await bcrypt.hash(dto.password, 10);
-
+        
         const usuario = new Usuario({
             id_persona: dto.id_persona,
             email: dto.email,
-            password: passwordHash,
+            password: dto.password,
             rol: dto.rol ?? 'user',
             foto_perfil: dto.foto_perfil,
             activo: dto.activo ?? true,

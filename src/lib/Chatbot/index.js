@@ -1,6 +1,8 @@
 const ConversacionRepositorySequelize = require('./infrastructure/ConversacionRepositorySequelize');
 const ChatRepositorySequelize = require('./infrastructure/ChatRepositorySequelize');
 const CVRepositorySequelize = require('../CV/infrastructure/CVRepositorySequelize');
+const TendenciaRepositorySequelize = require('../Tendencias/infrastructure/TendenciaRepositorySequelize');
+const ConfiguracionIARepositorySequelize = require('../ConfiguracionIA/infrastructure/repositories/ConfiguracionIARepositorySequelize');
 const GroqService = require('../../infrastructure/services/GroqService');
 
 // Casos de Uso - Conversacion
@@ -25,18 +27,24 @@ const ConversacionController = require('./infrastructure/http/controller/Convers
 const ChatController = require('./infrastructure/http/controller/ChatController');
 
 // Rutas
-const ConversacionRoutes = require("./infrastructure/http/routes/conversacion.routes");
-const ChatRoutes = require("./infrastructure/http/routes/chat.routes");
+const ConversacionRoutes = require('./infrastructure/http/routes/conversacion.routes');
+const ChatRoutes = require('./infrastructure/http/routes/chat.routes');
 
 module.exports = function registerChatbotModule(app) {
-    // 1. Infraestructura (Repositorio + Servicio Externo de IA)
     const conversacionRepository = new ConversacionRepositorySequelize();
     const chatRepository = new ChatRepositorySequelize();
     const cvRepository = new CVRepositorySequelize();
+    const tendenciaRepository = new TendenciaRepositorySequelize();
+    const configuracionRepository = new ConfiguracionIARepositorySequelize();
     const iaService = new GroqService();
 
-    // 2. Casos de uso - Conversacion
-    const enviarMensaje = new EnviarMensaje(conversacionRepository, cvRepository, iaService);
+    const enviarMensaje = new EnviarMensaje(
+        conversacionRepository,
+        cvRepository,
+        iaService,
+        configuracionRepository,
+        tendenciaRepository
+    );
     const listarConversacion = new ListarConversacion(conversacionRepository);
     const listarConversacionPorChat = new ListarConversacionPorChat(conversacionRepository);
     const obtenerConversacion = new ObtenerConversacion(conversacionRepository);
@@ -44,7 +52,6 @@ module.exports = function registerChatbotModule(app) {
     const limpiarHistorialConversacion = new LimpiarHistorialConversacion(conversacionRepository);
     const actualizarConversacion = new ActualizarConversacion(conversacionRepository);
 
-    // 3. Casos de uso - Chat
     const crearChat = new CrearChat(chatRepository);
     const listarChats = new ListarChats(chatRepository);
     const obtenerChat = new ObtenerChat(chatRepository);
@@ -52,7 +59,6 @@ module.exports = function registerChatbotModule(app) {
     const actualizarChat = new ActualizarChat(chatRepository);
     const eliminarChat = new EliminarChat(chatRepository);
 
-    // 4. Controller (Pasamos los casos de uso como un objeto)
     const conversacionController = new ConversacionController({
         enviarMensaje,
         listarConversacion,
@@ -63,7 +69,7 @@ module.exports = function registerChatbotModule(app) {
         actualizarConversacion
     });
 
-    app.use("/api/conversacion", ConversacionRoutes(conversacionController));
+    app.use('/api/conversacion', ConversacionRoutes(conversacionController));
 
     const chatController = new ChatController({
         crearChat,
@@ -74,6 +80,5 @@ module.exports = function registerChatbotModule(app) {
         eliminarChat
     });
 
-    // 4. Rutas
-    app.use("/api/chat", ChatRoutes(chatController));
+    app.use('/api/chat', ChatRoutes(chatController));
 };

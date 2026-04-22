@@ -1,52 +1,59 @@
 const OpenAI = require('openai');
 
 class OpenAIService {
-    constructor() {
-        this.client = new OpenAI({
-            apiKey: process.env.OPENAI_API_KEY
-        });
-        this.model = process.env.OPENAI_MODEL || 'gpt-4-turbo-preview';
+    constructor(apiKey, modelo = 'gpt-4o-mini') {
+        if (!apiKey) throw new Error('OpenAI API key requerida');
+        this.client = new OpenAI({ apiKey });
+        this.modelo = modelo;
+        console.log('✅ OpenAI Service inicializado con modelo:', this.modelo);
     }
 
-    async generarRespuesta(mensaje, historial = [], contexto = {}) {
+    async generarRespuesta(mensajeUsuario, promptSistema, opciones = {}) {
         try {
-            const mensajesFormateados = [
-                {
-                    role: 'system',
-                    content: this.obtenerPromptSistema(contexto)
-                },
-                ...historial,
-                {
-                    role: 'user',
-                    content: mensaje
-                }
-            ];
+            const { maxTokens = 2000, jsonMode = false } = opciones;
 
-            const completion = await this.client.chat.completions.create({
-                model: this.model,
-                messages: mensajesFormateados,
+            const requestParams = {
+                model: this.modelo,
+                messages: [
+                    { role: 'system', content: promptSistema },
+                    { role: 'user', content: mensajeUsuario }
+                ],
                 temperature: 0.7,
-                max_tokens: 1000,
-            });
-
-            return {
-                content: completion.choices[0].message.content,
-                model: completion.model,
-                usage: completion.usage
+                max_tokens: maxTokens
             };
+
+            if (jsonMode) {
+                requestParams.response_format = { type: 'json_object' };
+            }
+
+            const completion = await this.client.chat.completions.create(requestParams);
+            return completion.choices[0].message.content;
         } catch (error) {
-            console.error('Error al llamar a OpenAI:', error);
-            throw new Error('Error al generar respuesta del chatbot');
+            console.error('🔴 ERROR OpenAI:', error.message);
+            throw new Error(`Error con OpenAI: ${error.message}`);
         }
     }
 
-    obtenerPromptSistema(contexto) {
-        return `Eres un asistente virtual experto en recursos humanos y gestión de CVs. 
-        Tu función es ayudar a los usuarios a mejorar sus perfiles profesionales mediante rutas
-        de aprendizaje, crear CVs efectivos y brindar consejos sobre desarrollo de carrera.
-        
-        Responde de manera profesional, amigable y concisa.
-        ${contexto.instrucciones_adicionales || ''}`;
+    async generarRespuestaConHistorial(messages, opciones = {}) {
+        try {
+            const { maxTokens = 2000 } = opciones;
+
+            const completion = await this.client.chat.completions.create({
+                model: this.modelo,
+                messages,
+                temperature: 0.7,
+                max_tokens: maxTokens
+            });
+
+            return completion.choices[0].message.content;
+        } catch (error) {
+            console.error('🔴 ERROR OpenAI (historial):', error.message);
+            throw new Error(`Error con OpenAI (historial): ${error.message}`);
+        }
+    }
+
+    obtenerModeloActual() {
+        return this.modelo;
     }
 }
 

@@ -5,6 +5,13 @@ const ChatModel = require('./ChatModel');
 const CVModel = require('./CVModel');
 const HabilidadesModel = require('./HabilidadesModel');
 const UsuarioModel = require('./UsuarioModel');
+const TendenciaModel = require('./TendenciaModel');
+const ExperienciaLaboralModel = require('./ExperienciaLaboralModel');
+const EducacionModel = require('./EducacionModel');
+const IdiomaModel = require('./IdiomaModel');
+const CertificacionModel = require('./CertificacionModel');
+const RutaAprendizajeModel = require('./RutaAprendizajeModel');
+const ConfiguracionIAModel = require('./ConfiguracionIAModel');
 const crearAdminPorDefecto = require('../database/seeders/adminSeeder');
 
 /*  CREACIÓN DE RELACIONES */
@@ -33,11 +40,39 @@ ConversacionModel.belongsTo(ChatModel, { foreignKey: 'chat_id', as: 'chat' });
 PersonaModel.hasMany(ConversacionModel, { foreignKey: 'persona_id', as: 'conversaciones' });
 ConversacionModel.belongsTo(PersonaModel, { foreignKey: 'persona_id', as: 'persona' });
 
+// 7. Relación Persona - Tendencia (Uno a Muchos)
+PersonaModel.hasMany(TendenciaModel, { foreignKey: 'persona_id', as: 'tendencias' });
+TendenciaModel.belongsTo(PersonaModel, { foreignKey: 'persona_id', as: 'persona' });
+
+// 8. Relación CV - ExperienciaLaboral (Uno a Muchos)
+CVModel.hasMany(ExperienciaLaboralModel, { foreignKey: 'id_cv', as: 'experiencias' });
+ExperienciaLaboralModel.belongsTo(CVModel, { foreignKey: 'id_cv' });
+
+// 9. Relación CV - Educacion (Uno a Muchos)
+CVModel.hasMany(EducacionModel, { foreignKey: 'id_cv', as: 'educaciones' });
+EducacionModel.belongsTo(CVModel, { foreignKey: 'id_cv' });
+
+// 10. Relación CV - Idioma (Uno a Muchos)
+CVModel.hasMany(IdiomaModel, { foreignKey: 'id_cv', as: 'idiomas' });
+IdiomaModel.belongsTo(CVModel, { foreignKey: 'id_cv' });
+
+// 11. Relación CV - Certificacion (Uno a Muchos)
+CVModel.hasMany(CertificacionModel, { foreignKey: 'id_cv', as: 'certificaciones' });
+CertificacionModel.belongsTo(CVModel, { foreignKey: 'id_cv' });
+
+// 12. Relación Persona - RutaAprendizaje (Uno a Muchos)
+PersonaModel.hasMany(RutaAprendizajeModel, { foreignKey: 'persona_id', as: 'rutas_aprendizaje' });
+RutaAprendizajeModel.belongsTo(PersonaModel, { foreignKey: 'persona_id', as: 'persona' });
+
+// 13. Relación Persona - ConfiguracionIA (Uno a Uno)
+PersonaModel.hasOne(ConfiguracionIAModel, { foreignKey: 'persona_id', as: 'configuracion_ia' });
+ConfiguracionIAModel.belongsTo(PersonaModel, { foreignKey: 'persona_id', as: 'persona' });
+
 const syncModels = async () => {
   try {
-    // await db.sync({ alter: true });  -->  Actualiza tablas sin perder datos
-    // await db.sync({ force: true });  -->  Eliimina y recrea tablas
-    await db.sync();
+    // alter: true → añade columnas nuevas sin borrar datos existentes
+    // force: true → elimina y recrea tablas (solo para desarrollo desde cero)
+    await db.sync({ alter: true });
     await crearAdminPorDefecto(UsuarioModel);
 
     console.log('✅ Modelos y relaciones sincronizados con la base de datos');
@@ -54,5 +89,12 @@ module.exports = {
   CVModel,
   HabilidadesModel,
   UsuarioModel,
+  TendenciaModel,
+  ExperienciaLaboralModel,
+  EducacionModel,
+  IdiomaModel,
+  CertificacionModel,
+  RutaAprendizajeModel,
+  ConfiguracionIAModel,
   syncModels,
 };

@@ -5,12 +5,12 @@ const ChatModel = db.define(
     'Chat',
     {
         id: {
-            type: DataTypes.BIGINT,
+            type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true,
         },
         persona_id: {
-            type: DataTypes.BIGINT,
+            type: DataTypes.INTEGER,
             allowNull: false,
         },
         titulo: {

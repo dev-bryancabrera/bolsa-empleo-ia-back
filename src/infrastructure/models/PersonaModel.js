@@ -6,7 +6,7 @@ const PersonaModel = db.define(
     'Persona',
     {
         id: {
-            type: DataTypes.BIGINT,
+            type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true,
         },
@@ -39,6 +39,53 @@ const PersonaModel = db.define(
             allowNull: true,
         },
         pais: {
+            type: DataTypes.STRING(100),
+            allowNull: true,
+        },
+        // Información profesional
+        titulo_profesional: {
+            type: DataTypes.STRING(150),
+            allowNull: true,
+        },
+        descripcion: {
+            type: DataTypes.TEXT,
+            allowNull: true,
+        },
+        nivel_educativo: {
+            type: DataTypes.STRING(100),
+            allowNull: true,
+        },
+        genero: {
+            type: DataTypes.STRING(50),
+            allowNull: true,
+        },
+        // Presencia digital
+        linkedin: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        github: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        sitio_web: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        // Preferencias laborales
+        modalidad_trabajo: {
+            type: DataTypes.STRING(50),
+            allowNull: true,
+        },
+        disponibilidad: {
+            type: DataTypes.STRING(50),
+            allowNull: true,
+        },
+        salario_esperado: {
+            type: DataTypes.STRING(100),
+            allowNull: true,
+        },
+        sector_interes: {
             type: DataTypes.STRING(100),
             allowNull: true,
         },

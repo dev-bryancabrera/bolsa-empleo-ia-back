@@ -5,12 +5,12 @@ const HabilidadesModel = db.define(
     'Habilidades',
     {
         id: {
-            type: DataTypes.BIGINT,
+            type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true,
         },
         id_cv: {
-            type: DataTypes.BIGINT,
+            type: DataTypes.INTEGER,
             allowNull: false,
         },
         nombre: {

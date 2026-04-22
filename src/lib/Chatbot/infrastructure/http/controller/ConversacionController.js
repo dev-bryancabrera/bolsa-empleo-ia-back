@@ -20,14 +20,15 @@ class ConversacionController {
     // 1. Enviar un nuevo mensaje y obtener respuesta de la IA
     enviarMensaje = async (req, res) => {
         try {
-            const { mensaje, chat_id } = req.body;
+            const { mensaje, chat_id, metadata, modo } = req.body;
             const personaId = req.usuario.persona?.id || req.body.persona_id;
+            const esNuevaConversacion = metadata?.esNuevaConversacion || false;
 
             if (!mensaje) {
                 return res.status(400).json({ error: 'El mensaje es requerido' });
             }
 
-            const resultado = await this._enviarMensaje.execute(personaId, chat_id, mensaje);
+            const resultado = await this._enviarMensaje.execute(personaId, chat_id, mensaje, esNuevaConversacion, modo || null);
             res.status(201).json(resultado);
         } catch (error) {
             console.error('Error en enviarMensaje:', error);

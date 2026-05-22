@@ -12,6 +12,7 @@ class CVController {
         verificarCompatibilidad,
         extraerCV,
         importarCV,
+        optimizarCV,
     }) {
         this.crearCV = crearCV;
         this.listarCVs = listarCVs;
@@ -25,6 +26,7 @@ class CVController {
         this.verificarCompatibilidad = verificarCompatibilidad;
         this.extraerCV = extraerCV;
         this.importarCV = importarCV;
+        this.optimizarCV = optimizarCV;
     }
 
     crear = async (req, res, next) => {
@@ -57,8 +59,13 @@ class CVController {
     obtenerPorPersona = async (req, res, next) => {
         try {
             const cv = await this.obtenerCVPersona.execute(req.params.personaId);
+            if (!cv) return res.status(404).json({ success: false, mensaje: 'CV no encontrado' });
             res.status(200).json(cv);
         } catch (error) {
+            const msg = error?.message || '';
+            if (msg.includes('no encontró') || msg.includes('not found') || msg.includes('CV_NOT_FOUND')) {
+                return res.status(404).json({ success: false, mensaje: 'CV no encontrado' });
+            }
             next(error);
         }
     }
@@ -68,6 +75,10 @@ class CVController {
             const cv = await this.obtenerCVCompletoPorUsuario.execute(req.params.usuarioId);
             res.status(200).json(cv);
         } catch (error) {
+            const msg = error?.message || '';
+            if (msg.includes('no encontró') || msg.includes('not found') || msg.includes('CV_NOT_FOUND')) {
+                return res.status(404).json({ success: false, mensaje: 'CV no encontrado' });
+            }
             next(error);
         }
     }
@@ -158,6 +169,20 @@ class CVController {
             }
 
             const resultado = await this.importarCV.execute(personaId, req.body);
+            res.status(200).json(resultado);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    // ── Optimizar CV con IA ──
+    optimizar = async (req, res, next) => {
+        try {
+            const { cv_id } = req.body;
+            if (!cv_id) return res.status(400).json({ message: 'cv_id es requerido' });
+
+            const personaId = req.usuario?.id_persona || null;
+            const resultado = await this.optimizarCV.execute(cv_id, personaId);
             res.status(200).json(resultado);
         } catch (error) {
             next(error);

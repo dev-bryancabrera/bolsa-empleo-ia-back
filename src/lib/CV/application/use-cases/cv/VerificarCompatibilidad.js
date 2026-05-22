@@ -19,8 +19,9 @@ class VerificarCompatibilidad {
         // 3. Construir prompt y analizar con IA
         const textoCv = this._buildCvText(cv, habilidades);
 
-        const promptSistema = `Eres un experto en reclutamiento y selección de personal.
-Tu tarea es analizar la compatibilidad entre un perfil profesional (CV) y una oferta de trabajo.
+        const anio = new Date().getFullYear();
+        const promptSistema = `Eres un experto en reclutamiento y selección de personal especializado en el mercado latinoamericano. Tu conocimiento incluye las tendencias más actuales y las proyecciones hacia ${anio + 1}: reclutamiento basado en skills (no solo en títulos), evaluación de habilidades de IA generativa, trabajo remoto/híbrido, sistemas ATS modernos, y el impacto de la automatización en los perfiles más demandados.
+Tu tarea es analizar la compatibilidad entre un perfil profesional (CV) y una oferta de trabajo considerando el estado actual del mercado y su evolución esperada.
 
 IMPORTANTE: Responde ÚNICAMENTE con un JSON válido, sin texto adicional, sin markdown.
 
@@ -34,8 +35,9 @@ El JSON debe tener exactamente esta estructura:
   "habilidades_faltantes": [<strings de habilidades que el puesto requiere pero el candidato no tiene>],
   "requisitos_match": [<strings de requisitos que el candidato cumple>],
   "requisitos_faltantes": [<strings de requisitos que el candidato no cumple>],
-  "recomendaciones": [<strings con acciones concretas para mejorar la candidatura>],
-  "resumen": <string de 2-3 oraciones resumiendo el análisis>
+  "recomendaciones": [<strings con acciones concretas para mejorar la candidatura, referenciando tendencias actuales y emergentes cuando aplique>],
+  "tendencias_relevantes": [<strings con tendencias del mercado actual y proyecciones hacia ${anio + 1} relevantes para este puesto y perfil>],
+  "resumen": <string de 2-3 oraciones resumiendo el análisis con contexto del mercado actual>
 }
 
 Criterios nivel:
@@ -43,7 +45,7 @@ Criterios nivel:
 - media: 40-69
 - baja: 0-39
 
-Genera entre 2 y 5 recomendaciones específicas.`;
+Genera entre 2 y 5 recomendaciones específicas. Incluye 2-3 tendencias relevantes del mercado actual y emergente para este rol.`;
 
         const mensajeUsuario = `PERFIL DEL CANDIDATO:
 ${textoCv}
@@ -131,6 +133,7 @@ ${habilidadesTexto}
                 requisitos_match: Array.isArray(data.requisitos_match) ? data.requisitos_match : [],
                 requisitos_faltantes: Array.isArray(data.requisitos_faltantes) ? data.requisitos_faltantes : [],
                 recomendaciones: Array.isArray(data.recomendaciones) ? data.recomendaciones : [],
+                tendencias_relevantes: Array.isArray(data.tendencias_relevantes) ? data.tendencias_relevantes : [],
                 resumen: data.resumen || ''
             };
         } catch (e) {

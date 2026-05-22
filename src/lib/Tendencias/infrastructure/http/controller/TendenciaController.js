@@ -35,6 +35,13 @@ class TendenciaController {
             });
 
         } catch (error) {
+            if (error.message === 'CV_NOT_FOUND') {
+                return res.status(422).json({
+                    success: false,
+                    codigo: 'CV_NOT_FOUND',
+                    mensaje: 'No tienes CV registrado. Crea tu CV para ver las tendencias personalizadas.'
+                });
+            }
             console.error('Error en obtenerTendencias:', error);
             return res.status(500).json({
                 success: false,
@@ -58,6 +65,13 @@ class TendenciaController {
             });
 
         } catch (error) {
+            if (error.message === 'CV_NOT_FOUND') {
+                return res.status(422).json({
+                    success: false,
+                    codigo: 'CV_NOT_FOUND',
+                    mensaje: 'No tienes CV registrado. Crea tu CV para ver las tendencias personalizadas.'
+                });
+            }
             console.error('Error en generarTendencias:', error);
             return res.status(500).json({
                 success: false,
@@ -81,6 +95,13 @@ class TendenciaController {
             });
 
         } catch (error) {
+            if (error.message === 'CV_NOT_FOUND') {
+                return res.status(422).json({
+                    success: false,
+                    codigo: 'CV_NOT_FOUND',
+                    mensaje: 'No tienes CV registrado. Crea tu CV para ver las tendencias personalizadas.'
+                });
+            }
             console.error('Error en regenerarTendencias:', error);
             return res.status(500).json({
                 success: false,

@@ -38,7 +38,8 @@ class GenerarTendencias {
 
       // 5. Construir y enviar prompt
       const prompt = this._construirPrompt(persona, cv, habilidades);
-      const promptSistema = `Eres un consultor senior en mercado laboral de Ecuador y Latinoamérica, especializado en análisis de brechas competenciales. Responde ÚNICAMENTE con un objeto JSON válido.`;
+      const anioActual = new Date().getFullYear();
+      const promptSistema = `Eres un consultor senior en mercado laboral de Ecuador y Latinoamérica, especializado en análisis de brechas competenciales y tendencias de empleo ${anioActual}-${anioActual + 1}. Tu conocimiento abarca tanto las tendencias ya establecidas como las emergentes y proyectadas: impacto de la IA generativa en el mercado laboral, auge del trabajo remoto/híbrido en Latam, demanda de skills de automatización y data, economía naranja, certificaciones en la nube (AWS, Azure, GCP), y herramientas ATS predominantes en la región (Workday, LinkedIn Recruiter, Computrabajo). Responde ÚNICAMENTE con un objeto JSON válido.`;
 
       const respuestaIA = await servicioIA.generarRespuesta(prompt, promptSistema, { maxTokens: 8000, jsonMode: true });
 
@@ -69,7 +70,9 @@ class GenerarTendencias {
       return { success: true, data: tendenciaCreada, mensaje: 'Tendencias generadas exitosamente' };
 
     } catch (error) {
-      console.error('Error en GenerarTendencias:', error);
+      if (error.message !== 'CV_NOT_FOUND') {
+        console.error('Error en GenerarTendencias:', error);
+      }
       throw error;
     }
   }
@@ -171,12 +174,12 @@ ESTRUCTURA JSON EXACTA:
   "recomendaciones": [
     {
       "tipo": "Curso|Certificación|Proyecto|Red_profesional",
-      "titulo": "string",
+      "titulo": "string — nombre del tema o skill a aprender (ej: 'Docker y Kubernetes', 'AWS Solutions Architect')",
       "razon": "string — explica qué brecha específica cierra",
       "brecha_que_cierra": "string — nombre de la brecha",
       "icon": "emoji",
-      "accion": "string",
-      "url": "string (usa SOLO las URLs de cursos de arriba)"
+      "accion": "string (ej: 'Ver cursos', 'Obtener certificación')",
+      "plataforma": "Udemy|Coursera|Platzi|YouTube|LinkedIn_Learning"
     }
   ],
   "tendencias_sector": [
@@ -196,14 +199,6 @@ ESTRUCTURA JSON EXACTA:
       "relevancia": number (1-10)
     }
   ],
-  "datos_interesantes": [
-    {
-      "titulo": "string — dato relevante del mercado laboral ${anio}",
-      "valor": "string — estadística o hecho concreto",
-      "relevancia": "string — por qué importa para alguien con perfil de '${cv.titulo_profesional}'",
-      "fuente": "string (ej: Stack Overflow Survey ${anio}, LinkedIn Workforce Report)"
-    }
-  ],
   "insights_personalizados": {
     "ventaja_competitiva": "string — qué tiene este profesional que pocos tienen",
     "riesgo_principal": "string — la brecha más urgente de cerrar",
@@ -214,10 +209,11 @@ ESTRUCTURA JSON EXACTA:
 
 DIRECTRICES:
 1. Identifica mínimo 3 brechas críticas realistas para el perfil en el mercado latinoamericano ${anio}.
-2. Las habilidades_demandadas deben ser específicas al sector '${cv.sector_profesional}'.
-3. Genera mínimo 5 tendencias del sector.
-4. Los empleos_sugeridos deben coincidir con ${cv.anios_experiencia} años de experiencia.
-5. El JSON debe ser 100% válido y parseable.`;
+2. Las habilidades_demandadas deben ser específicas al sector '${cv.sector_profesional}', priorizando skills emergentes ${anio}-${anio + 1}: IA generativa, automatización, data literacy, cloud computing, ciberseguridad.
+3. Genera mínimo 5 tendencias del sector, incluyendo tendencias relacionadas con IA en reclutamiento, trabajo remoto/híbrido y economía naranja en Latam. Incluye tanto tendencias ya consolidadas como las que se proyectan para los próximos 12-24 meses.
+4. Los empleos_sugeridos deben coincidir con ${cv.anios_experiencia} años de experiencia e incluir roles emergentes del mercado ${anio}-${anio + 1}.
+5. En recomendaciones, elige la plataforma más adecuada para cada skill: Udemy para cursos prácticos, Coursera para certificaciones académicas, Platzi para el mercado latinoamericano, YouTube para contenido gratuito, LinkedIn_Learning para habilidades blandas y profesionales.
+6. El JSON debe ser 100% válido y parseable.`;
   }
 
   _parsearRespuesta(respuesta) {

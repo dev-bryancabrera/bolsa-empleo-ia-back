@@ -11,6 +11,7 @@ const registerChatbotModule = require('./Chatbot');
 const registerTendenciaModule = require('./Tendencias');
 const registerRutaAprendizajeModule = require('./RutaAprendizaje');
 const registerConfiguracionIAModule = require('./ConfiguracionIA');
+const registerPortfolioModule = require('./Portfolio');
 
 function buildApp() {
     const app = express();
@@ -48,6 +49,7 @@ function buildApp() {
     registerChatbotModule(app);
     registerTendenciaModule(app);
     registerRutaAprendizajeModule(app);
+    registerPortfolioModule(app);
 
     // 404
     app.use((req, res) => res.status(404).json({ message: 'Ruta no encontrada' }));

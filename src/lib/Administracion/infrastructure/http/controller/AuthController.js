@@ -44,8 +44,20 @@ class AuthController {
     // ─── Verificar token ───────────────────────────────────────────────────
     verificarToken = async (req, res) => {
         try {
-            const resultado = await this.verificarTokenUseCase.execute(req.token);
-            res.json({ mensaje: 'Token válido', ...resultado });
+            // req.usuario is already fetched by the auth middleware — use it directly
+            const u = req.usuario.get ? req.usuario.get({ plain: true }) : req.usuario;
+            res.json({
+                mensaje: 'Token válido',
+                usuario: {
+                    id: u.id,
+                    email: u.email,
+                    rol: u.rol,
+                    google_nombre: u.google_nombre || null,
+                    google_foto_url: u.google_foto_url || null,
+                    proveedor: u.proveedor,
+                    id_persona: u.id_persona || null,
+                }
+            });
         } catch (error) {
             res.status(401).json({ error: error.message });
         }

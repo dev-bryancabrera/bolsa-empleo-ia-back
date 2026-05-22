@@ -22,6 +22,7 @@ const ValidarCVArchivo = require('./application/use-cases/cv/ValidarCVArchivo');
 const VerificarCompatibilidad = require('./application/use-cases/cv/VerificarCompatibilidad');
 const ExtraerCV = require('./application/use-cases/cv/ExtraerCV');
 const ImportarCV = require('./application/use-cases/cv/ImportarCV');
+const OptimizarCV = require('./application/use-cases/cv/OptimizarCV');
 
 // ── Casos de uso Habilidades ──
 const CrearHabilidad = require('./application/use-cases/habilidades/CrearHabilidad');
@@ -103,6 +104,15 @@ module.exports = function registerCVModule(app) {
     const verificarCompatibilidad = new VerificarCompatibilidad(cvRepository, iaService);
     const extraerCV = new ExtraerCV(iaService);
     const importarCV = new ImportarCV(cvRepository, habilidadesRepository, personaRepository);
+    const optimizarCV = new OptimizarCV(
+        cvRepository,
+        habilidadesRepository,
+        experienciaRepository,
+        educacionRepository,
+        idiomaRepository,
+        certificacionRepository,
+        iaService
+    );
 
     const cvController = new CVController({
         crearCV,
@@ -117,6 +127,7 @@ module.exports = function registerCVModule(app) {
         verificarCompatibilidad,
         extraerCV,
         importarCV,
+        optimizarCV,
     });
 
     app.use("/api/cv", CVRoutes(cvController));

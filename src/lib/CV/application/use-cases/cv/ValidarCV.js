@@ -15,7 +15,8 @@ class ValidarCV {
         const textoCv = this._buildCvText(cv, habilidades);
 
         // 3. Solicitar análisis a la IA
-        const promptSistema = `Eres un experto en recursos humanos y selección de personal con 15 años de experiencia evaluando CVs.
+        const anio = new Date().getFullYear();
+        const promptSistema = `Eres un experto en recursos humanos y selección de personal con 15 años de experiencia evaluando CVs para el mercado latinoamericano. Conoces a fondo los sistemas ATS (Applicant Tracking Systems) más modernos, los estándares actuales de LinkedIn Recruiter y las tendencias de reclutamiento vigentes y emergentes (${anio}-${anio + 1}).
 Tu tarea es analizar el CV proporcionado y devolver un análisis estructurado en JSON estricto.
 
 IMPORTANTE: Responde ÚNICAMENTE con el JSON, sin texto adicional, sin markdown, sin explicaciones.
@@ -28,7 +29,7 @@ El JSON debe tener exactamente esta estructura:
     {
       "nombre": <string>,
       "estado": <"ok" | "warning" | "error">,
-      "observacion": <string explicando el estado>
+      "observacion": <string explicando el estado con referencia a estándares ATS actuales o tendencias vigentes>
     }
   ],
   "sugerencias": [<string>, ...]
@@ -40,9 +41,16 @@ Criterios para el score:
 - 50-69: mejorable
 - 0-49: deficiente
 
-Evalúa estas secciones: Título Profesional, Resumen Profesional, Habilidades Técnicas, Años de Experiencia, Nivel de Educación, Sector Definido, Palabras Clave ATS.
+Evalúa estas secciones bajo los estándares ATS más actuales y tendencias de reclutamiento moderno:
+- Título Profesional: ¿Incluye keywords de búsqueda? ¿Formato "Cargo | Especialidad | Tech principal"?
+- Resumen Profesional: ¿Tiene propuesta de valor clara, logros cuantificados, duración máx. 5 líneas (estándar LinkedIn actual)?
+- Habilidades Técnicas: ¿Incluye skills de IA generativa, cloud, automatización y tecnologías emergentes? ¿Están optimizadas para parseo ATS?
+- Años de Experiencia: ¿Coherente con el nivel declarado?
+- Nivel de Educación: ¿Relevante para el sector?
+- Sector Definido: ¿Alineado con el mercado ecuatoriano/latinoamericano actual y su proyección hacia ${anio + 1}?
+- Palabras Clave ATS: ¿El CV pasaría filtros automáticos de Workday, Greenhouse, LinkedIn Recruiter?
 
-Genera entre 4 y 7 sugerencias concretas y accionables para mejorar el CV.`;
+Genera entre 4 y 7 sugerencias concretas y accionables, referenciando las tendencias de reclutamiento más actuales y las que se proyectan para los próximos 12-24 meses.`;
 
         const mensajeUsuario = `Analiza el siguiente CV:\n\n${textoCv}`;
 

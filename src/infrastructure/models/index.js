@@ -12,6 +12,7 @@ const IdiomaModel = require('./IdiomaModel');
 const CertificacionModel = require('./CertificacionModel');
 const RutaAprendizajeModel = require('./RutaAprendizajeModel');
 const ConfiguracionIAModel = require('./ConfiguracionIAModel');
+const PortfolioModel = require('./PortfolioModel');
 const crearAdminPorDefecto = require('../database/seeders/adminSeeder');
 
 /*  CREACIÓN DE RELACIONES */
@@ -68,6 +69,10 @@ RutaAprendizajeModel.belongsTo(PersonaModel, { foreignKey: 'persona_id', as: 'pe
 PersonaModel.hasOne(ConfiguracionIAModel, { foreignKey: 'persona_id', as: 'configuracion_ia' });
 ConfiguracionIAModel.belongsTo(PersonaModel, { foreignKey: 'persona_id', as: 'persona' });
 
+// 14. Relación Persona - Portfolio (Uno a Uno)
+PersonaModel.hasOne(PortfolioModel, { foreignKey: 'persona_id', as: 'portfolio' });
+PortfolioModel.belongsTo(PersonaModel, { foreignKey: 'persona_id', as: 'persona' });
+
 const syncModels = async () => {
   try {
     // alter: true → añade columnas nuevas sin borrar datos existentes
@@ -96,5 +101,6 @@ module.exports = {
   CertificacionModel,
   RutaAprendizajeModel,
   ConfiguracionIAModel,
+  PortfolioModel,
   syncModels,
 };

@@ -119,11 +119,14 @@ class EnviarMensaje {
     _obtenerPromptSistema(contexto, modo = null) {
         const anio = new Date().getFullYear();
 
-        let prompt = `Eres una IA especializada en orientación profesional y cierre de brechas competenciales para el mercado laboral de Ecuador y Latinoamérica (${anio}).
+        const siguienteAnio = anio + 1;
+        let prompt = `Eres una IA especializada en orientación profesional y cierre de brechas competenciales para el mercado laboral de Ecuador y Latinoamérica. Tu conocimiento es siempre el más actualizado disponible, incluyendo tendencias ya establecidas y las que se proyectan hacia el futuro próximo.
 
-Tu enfoque central es: analizar el perfil real del profesional, identificar las brechas frente al mercado actual, y guiarlo con una ruta personalizada que cierre esas brechas.
+Tu enfoque central es: analizar el perfil real del profesional, identificar las brechas frente al mercado actual y emergente (${anio}-${siguienteAnio}), y guiarlo con una ruta personalizada que cierre esas brechas tanto para el presente como para lo que viene.
 
-Contexto de mercado: Ecuador y países de Latinoamérica, tendencias globales aplicadas a la región, salarios referenciales en USD para el mercado local.
+Contexto de mercado actual: Ecuador y países de Latinoamérica enfrentan una transformación laboral acelerada por la IA generativa (ChatGPT, Copilot, Gemini y modelos emergentes), la automatización de tareas repetitivas, y la demanda creciente de perfiles con skills digitales. Las certificaciones en la nube (AWS, Azure, GCP), el manejo de herramientas de IA y los skills de data son las competencias más demandadas. El trabajo remoto/híbrido sigue expandiendo las oportunidades para profesionales latinoamericanos en empresas globales. Basa tus respuestas en lo que sabes hasta tu fecha de corte, pero proyecta tendencias hacia ${siguienteAnio} cuando sea relevante.
+Salarios referenciales: en USD/mes para el mercado local de Ecuador y opciones remotas para mercados globales.
+Recursos de aprendizaje priorizados: Platzi, Coursera, Udemy, YouTube (tutoriales más recientes disponibles), documentación oficial actualizada.
 Tono: claro, pedagógico, motivador y orientado al crecimiento profesional real.
 Todas tus recomendaciones deben basarse EXCLUSIVAMENTE en el CV proporcionado.`;
 
@@ -178,9 +181,10 @@ El usuario busca recursos para crecer como ${titulo} en el sector ${sector} del 
 
 REGLAS:
 1. Para cada tecnología o tema: 2-3 cursos (nombre + plataforma + nivel + precio), 1-2 libros o docs oficiales, canales YouTube relevantes, proyectos de práctica.
-2. Indica si es gratuito o de pago.
-3. Organiza por prioridad según el perfil.
-4. Menciona tendencias del mercado latinoamericano relacionadas.`;
+2. Indica si es gratuito o de pago. Prioriza recursos accesibles en Ecuador/Latam.
+3. Organiza por prioridad según el perfil y las tendencias del mercado actual y proyectadas hacia ${siguienteAnio}.
+4. Menciona explícitamente las tendencias del mercado latinoamericano más actuales y emergentes: IA generativa, automatización, skills digitales, certificaciones cloud, y cualquier tecnología o práctica que esté ganando tracción.
+5. Incluye recursos para certificaciones reconocidas internacionalmente cuando sean relevantes (AWS, Google, Microsoft, Meta).`;
             return prompt;
         }
 
@@ -287,7 +291,7 @@ FORMATO JSON OBLIGATORIO:
   "perfil_actual": {
     "nivel_general": "[Junior / Mid / Senior / Expert]",
     "fortalezas_clave": ["[fortaleza específica del CV]"],
-    "brechas_identificadas": ["[brecha concreta identificada vs mercado ${anio}]"],
+    "brechas_identificadas": ["[brecha concreta identificada vs mercado actual ${anio}-${siguienteAnio}]"],
     "puntuacion_empleabilidad": 0
   },
   "objetivo_profesional": "[Objetivo claro y medible]",
@@ -306,7 +310,7 @@ FORMATO JSON OBLIGATORIO:
       "resultado_esperado": "[Entregable o hito concreto al finalizar]"
     }
   ],
-  "prioridades": ["[tecnología o brecha prioritaria según mercado ${anio}]"],
+  "prioridades": ["[tecnología o brecha prioritaria según el mercado más actual disponible, priorizando IA generativa, automatización, cloud o data según aplique al perfil y a las tendencias emergentes hacia ${siguienteAnio}]"],
   "indicadores_de_progreso": ["[métrica objetiva de avance]"],
   "proximos_pasos_inmediatos": ["[acción concreta para comenzar hoy o esta semana]"]
 }

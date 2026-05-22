@@ -31,6 +31,7 @@ module.exports = (cvController) => {
     router.post('/compatibilidad', auth, cvController.compatibilidad);
     router.post('/extraer', auth, upload.single('cv'), cvController.extraer);
     router.post('/importar', auth, cvController.importar);
+    router.post('/optimizar', auth, cvController.optimizar);
 
     // ── Rutas CRUD ──
     router.get('/', auth, cvController.listar);

@@ -13,7 +13,7 @@ const ConfiguracionIAModel = db.define('ConfiguracionIA', {
         unique: true
     },
     proveedor: {
-        type: DataTypes.ENUM('groq', 'openai', 'anthropic'),
+        type: DataTypes.STRING(20),
         defaultValue: 'groq',
         allowNull: false
     },

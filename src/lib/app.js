@@ -1,7 +1,4 @@
 const express = require('express');
-const cors = require('cors');
-const passport = require('passport');
-const configurePassport = require('../infrastructure/services/passport');
 
 // Cargar módulos
 const registerPersonaModule = require('./Persona');
@@ -29,15 +26,11 @@ function buildApp() {
         next();
     });
 
-    // Passport (sin sesiones, usamos JWT)
-    configurePassport();
-    app.use(passport.initialize());
-
     // Health check
     app.get('/health/db', (req, res) => {
         res.status(200).json({
             status: 'OK',
-            database: 'MySQL conectado correctamente',
+            database: 'PostgreSQL (Supabase) conectado correctamente',
         });
     });
 

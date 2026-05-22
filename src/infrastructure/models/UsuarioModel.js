@@ -27,7 +27,7 @@ const UsuarioModel = db.define(
             defaultValue: 'user',
         },
         foto_perfil: {
-            type: DataTypes.BLOB('long'),
+            type: DataTypes.TEXT,
             allowNull: true,
         },
         activo: {
@@ -36,8 +36,13 @@ const UsuarioModel = db.define(
             defaultValue: true,
         },
         // Campos Google OAuth
+        supabase_uid: {
+            type: DataTypes.STRING(36),
+            allowNull: true,
+            unique: true,
+        },
         google_id: {
-            type: DataTypes.STRING(191), // utf8mb4: 191*4=764 bytes < límite 767
+            type: DataTypes.STRING(191),
             allowNull: true,
         },
         google_nombre: {
@@ -49,7 +54,7 @@ const UsuarioModel = db.define(
             allowNull: true,
         },
         proveedor: {
-            type: DataTypes.ENUM('local', 'google'),
+            type: DataTypes.STRING(20),
             allowNull: false,
             defaultValue: 'local',
         },

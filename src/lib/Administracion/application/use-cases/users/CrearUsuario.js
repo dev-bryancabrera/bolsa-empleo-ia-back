@@ -1,5 +1,4 @@
-const Usuario = require('../../../domain/Usuario');
-const bcrypt = require('bcrypt');
+const supabase = require('../../../../../infrastructure/services/SupabaseClient');
 
 class CrearUsuario {
     constructor(usuarioRepository, personaRepository) {
@@ -8,13 +7,11 @@ class CrearUsuario {
     }
 
     async execute(dto) {
-        // Verificar si el email ya existe
         const usuarioExistente = await this.usuarioRepository.findByEmail(dto.email);
         if (usuarioExistente) {
             throw new Error('El email ya está registrado');
         }
 
-        // Si se proporciona id_persona, verificar que existe y no esté asociada a otro usuario
         if (dto.id_persona) {
             const personaExiste = await this.personaRepository.obtenerPorId(dto.id_persona);
             if (!personaExiste) {
@@ -22,22 +19,31 @@ class CrearUsuario {
             }
 
             const usuarioConPersona = await this.usuarioRepository.findByIdWithPersona(dto.id_persona);
-
             if (usuarioConPersona && usuarioConPersona.id_persona === dto.id_persona) {
                 throw new Error('Esta persona ya tiene un usuario asociado');
             }
         }
-        
-        const usuario = new Usuario({
-            id_persona: dto.id_persona,
+
+        // Crear usuario en Supabase Auth
+        const { data, error } = await supabase.auth.admin.createUser({
             email: dto.email,
             password: dto.password,
-            rol: dto.rol ?? 'user',
-            foto_perfil: dto.foto_perfil,
-            activo: dto.activo ?? true,
+            email_confirm: true,
         });
 
-        return this.usuarioRepository.create(usuario);
+        if (error) {
+            throw new Error('Error al crear usuario en Supabase: ' + error.message);
+        }
+
+        const supabase_uid = data.user.id;
+
+        return this.usuarioRepository.createWithSupabase({
+            id_persona: dto.id_persona,
+            email: dto.email,
+            supabase_uid,
+            rol: dto.rol ?? 'user',
+            activo: dto.activo ?? true,
+        });
     }
 }
 

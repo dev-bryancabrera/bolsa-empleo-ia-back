@@ -1,15 +1,15 @@
 class AuthController {
-    constructor({ login, verificarToken, obtenerPerfil, actualizarPerfil, loginGoogle, solicitarRecuperacion, restablecerPassword }) {
+    constructor({ login, verificarToken, obtenerPerfil, actualizarPerfil, sincronizarGoogle, solicitarRecuperacion, restablecerPassword }) {
         this.loginUseCase = login;
         this.verificarTokenUseCase = verificarToken;
         this.obtenerPerfilUseCase = obtenerPerfil;
         this.actualizarPerfilUseCase = actualizarPerfil;
-        this.loginGoogleUseCase = loginGoogle;
+        this.sincronizarGoogleUseCase = sincronizarGoogle;
         this.solicitarRecuperacionUseCase = solicitarRecuperacion;
         this.restablecerPasswordUseCase = restablecerPassword;
     }
 
-    // ─── Login tradicional ─────────────────────────────────────────────────
+    // ─── Login email/password ──────────────────────────────────────────────
     login = async (req, res) => {
         try {
             const { email, password } = req.body;
@@ -19,32 +19,28 @@ class AuthController {
             const resultado = await this.loginUseCase.execute(email, password);
             res.json({ mensaje: 'Login exitoso', ...resultado });
         } catch (error) {
-            const status = (error.message === 'Credenciales inválidas') ? 401 : 500;
+            const status = error.message === 'Credenciales inválidas' ? 401 : 500;
             res.status(status).json({ error: error.message });
         }
     }
 
-    // ─── Google OAuth ──────────────────────────────────────────────────────
-    googleCallback = async (req, res) => {
+    // ─── Google OAuth (sincronización post-Supabase) ───────────────────────
+    sincronizarGoogle = async (req, res) => {
         try {
-            // req.user viene de passport
-            const resultado = await this.loginGoogleUseCase.execute(req.user);
-            const { token, usuario } = resultado;
-
-            // Redirigir al frontend con token y datos del usuario como query params
-            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-            const userEncoded = encodeURIComponent(JSON.stringify(usuario));
-            res.redirect(`${frontendUrl}/auth/google/callback?token=${token}&user=${userEncoded}`);
+            const token = req.header('Authorization')?.replace('Bearer ', '');
+            if (!token) {
+                return res.status(401).json({ error: 'Token de Supabase requerido' });
+            }
+            const resultado = await this.sincronizarGoogleUseCase.execute(token);
+            res.json({ mensaje: 'Sincronización exitosa', ...resultado });
         } catch (error) {
-            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-            res.redirect(`${frontendUrl}/auth/login?error=google_auth_failed`);
+            res.status(401).json({ error: error.message });
         }
     }
 
     // ─── Verificar token ───────────────────────────────────────────────────
     verificarToken = async (req, res) => {
         try {
-            // req.usuario is already fetched by the auth middleware — use it directly
             const u = req.usuario.get ? req.usuario.get({ plain: true }) : req.usuario;
             res.json({
                 mensaje: 'Token válido',
@@ -52,11 +48,11 @@ class AuthController {
                     id: u.id,
                     email: u.email,
                     rol: u.rol,
-                    google_nombre: u.google_nombre || null,
-                    google_foto_url: u.google_foto_url || null,
+                    google_nombre: u.google_nombre ?? null,
+                    google_foto_url: u.google_foto_url ?? null,
                     proveedor: u.proveedor,
-                    id_persona: u.id_persona || null,
-                }
+                    id_persona: u.id_persona ?? null,
+                },
             });
         } catch (error) {
             res.status(401).json({ error: error.message });
@@ -66,8 +62,7 @@ class AuthController {
     // ─── Perfil ────────────────────────────────────────────────────────────
     obtenerPerfil = async (req, res) => {
         try {
-            const idUsuario = req.params.idUser;
-            const usuario = await this.obtenerPerfilUseCase.execute(idUsuario);
+            const usuario = await this.obtenerPerfilUseCase.execute(req.params.idUser);
             res.json({ usuario });
         } catch (error) {
             res.status(500).json({ error: error.message });
@@ -75,25 +70,20 @@ class AuthController {
     }
 
     actualizarPerfil = async (req, res) => {
-        const { idUser } = req.params;
-        const { email, foto_perfil } = req.body;
+        try {
+            const { idUser } = req.params;
+            const { email, foto_perfil } = req.body;
 
-        const data = {
-            email,
-            foto_perfil: foto_perfil
-                ? Buffer.from(
-                    foto_perfil.replace(/^data:image\/\w+;base64,/, ''),
-                    'base64'
-                )
-                : null
-        };
+            const resultado = await this.actualizarPerfilUseCase.execute(idUser, {
+                email,
+                foto_perfil: foto_perfil ?? null,
+            });
 
-        const resultado = await this.actualizarPerfilUseCase.execute(idUser, data);
-        res.json({
-            mensaje: 'Perfil actualizado exitosamente',
-            usuario: resultado
-        });
-    };
+            res.json({ mensaje: 'Perfil actualizado exitosamente', usuario: resultado });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    }
 
     // ─── Recuperación de contraseña ────────────────────────────────────────
     solicitarRecuperacion = async (req, res) => {
@@ -114,9 +104,6 @@ class AuthController {
             const { token, nuevaPassword } = req.body;
             if (!token || !nuevaPassword) {
                 return res.status(400).json({ error: 'Token y nueva contraseña son requeridos' });
-            }
-            if (nuevaPassword.length < 6) {
-                return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
             }
             const resultado = await this.restablecerPasswordUseCase.execute(token, nuevaPassword);
             res.json(resultado);

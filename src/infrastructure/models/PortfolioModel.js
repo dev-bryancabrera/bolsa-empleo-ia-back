@@ -12,7 +12,7 @@ const PortfolioModel = db.define('Portfolio', {
         allowNull: false,
     },
     plantilla: {
-        type: DataTypes.ENUM('minimalista', 'profesional', 'creativo'),
+        type: DataTypes.STRING(50),
         defaultValue: 'minimalista',
     },
     publicado: {
@@ -24,11 +24,11 @@ const PortfolioModel = db.define('Portfolio', {
         unique: true,
     },
     configuracion: {
-        type: DataTypes.TEXT('long'),
+        type: DataTypes.TEXT,
         defaultValue: null,
     },
     contenido_extra: {
-        type: DataTypes.TEXT('long'),
+        type: DataTypes.TEXT,
         defaultValue: null,
     },
     created_at: {

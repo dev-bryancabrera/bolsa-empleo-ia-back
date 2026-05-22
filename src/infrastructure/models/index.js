@@ -14,6 +14,7 @@ const RutaAprendizajeModel = require('./RutaAprendizajeModel');
 const ConfiguracionIAModel = require('./ConfiguracionIAModel');
 const PortfolioModel = require('./PortfolioModel');
 const crearAdminPorDefecto = require('../database/seeders/adminSeeder');
+const supabase = require('../services/SupabaseClient');
 
 /*  CREACIÓN DE RELACIONES */
 
@@ -78,7 +79,7 @@ const syncModels = async () => {
     // alter: true → añade columnas nuevas sin borrar datos existentes
     // force: true → elimina y recrea tablas (solo para desarrollo desde cero)
     await db.sync({ alter: true });
-    await crearAdminPorDefecto(UsuarioModel);
+    await crearAdminPorDefecto(UsuarioModel, supabase);
 
     console.log('✅ Modelos y relaciones sincronizados con la base de datos');
   } catch (error) {

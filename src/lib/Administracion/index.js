@@ -12,7 +12,7 @@ const EliminarUsuario = require('./application/use-cases/users/EliminarUsuario')
 
 // Casos de uso de Autenticación
 const Login = require('./application/use-cases/auth/Login');
-const LoginGoogle = require('./application/use-cases/auth/LoginGoogle');
+const SincronizarGoogle = require('./application/use-cases/auth/SincronizarGoogle');
 const VerificarToken = require('./application/use-cases/auth/VerificarToken');
 const ObtenerPerfil = require('./application/use-cases/auth/ObtenerPerfil');
 const ActualizarPerfil = require('./application/use-cases/auth/ActualizarPerfil');
@@ -28,7 +28,6 @@ const UsuarioRoutes = require('./infrastructure/http/routes/administracion.route
 const AuthRoutes = require('./infrastructure/http/routes/auth.routes');
 
 module.exports = function registerAdministracionModule(app) {
-    // Infraestructura
     const personaRepository = new PersonaRepositorySequelize();
     const usuarioRepository = new UsuarioRepositorySequelize();
 
@@ -43,14 +42,13 @@ module.exports = function registerAdministracionModule(app) {
 
     // Casos de uso de Autenticación
     const login = new Login(usuarioRepository);
-    const loginGoogle = new LoginGoogle(usuarioRepository);
+    const sincronizarGoogle = new SincronizarGoogle(usuarioRepository, personaRepository);
     const verificarToken = new VerificarToken(usuarioRepository);
     const obtenerPerfil = new ObtenerPerfil(usuarioRepository);
     const actualizarPerfil = new ActualizarPerfil(usuarioRepository);
     const solicitarRecuperacion = new SolicitarRecuperacionPassword(usuarioRepository);
     const restablecerPassword = new RestablecerPassword(usuarioRepository);
 
-    // Controller de Administración
     const usuarioController = new UsuarioController({
         crearUsuario,
         listarUsuarios,
@@ -61,10 +59,9 @@ module.exports = function registerAdministracionModule(app) {
         eliminarUsuario,
     });
 
-    // Controller de Autenticación
     const authController = new AuthController({
         login,
-        loginGoogle,
+        sincronizarGoogle,
         verificarToken,
         obtenerPerfil,
         actualizarPerfil,
@@ -72,7 +69,6 @@ module.exports = function registerAdministracionModule(app) {
         restablecerPassword,
     });
 
-    // Registrar rutas
     app.use('/api/auth', AuthRoutes(authController));
     app.use('/api/admin', UsuarioRoutes(usuarioController));
 };

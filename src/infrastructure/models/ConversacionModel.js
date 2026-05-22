@@ -18,11 +18,11 @@ const ConversacionModel = db.define(
             allowNull: false,
         },
         mensaje: {
-            type: DataTypes.TEXT('long'),
+            type: DataTypes.TEXT,
             allowNull: false,
         },
         respuesta: {
-            type: DataTypes.TEXT('long'),
+            type: DataTypes.TEXT,
             allowNull: true,
         },
         tipo: {
@@ -38,7 +38,7 @@ const ConversacionModel = db.define(
             allowNull: true,
         },
         metadata: {
-            type: DataTypes.TEXT('long'),
+            type: DataTypes.TEXT,
             allowNull: true,
         },
         created_at: {

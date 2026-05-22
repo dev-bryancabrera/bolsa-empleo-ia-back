@@ -16,6 +16,52 @@ class UsuarioRepositorySequelize {
         }
     }
 
+    async findBySupabaseUid(uid) {
+        try {
+            const usuario = await UsuarioModel.findOne({ where: { supabase_uid: uid, activo: true } });
+            return usuario ? usuario.get({ plain: true }) : null;
+        } catch (error) {
+            throw new Error('Error al buscar usuario por supabase_uid: ' + error.message);
+        }
+    }
+
+    async createWithSupabase(data) {
+        try {
+            const row = await UsuarioModel.create({
+                email: data.email,
+                password: null,
+                supabase_uid: data.supabase_uid,
+                rol: data.rol || 'user',
+                activo: data.activo !== false,
+                id_persona: data.id_persona ?? null,
+                proveedor: 'local',
+            });
+            const { password, ...sinPassword } = row.toJSON();
+            return sinPassword;
+        } catch (error) {
+            throw new Error('Error al crear usuario: ' + error.message);
+        }
+    }
+
+    async createFromGoogle(data) {
+        try {
+            const row = await UsuarioModel.create({
+                email: data.email,
+                password: null,
+                supabase_uid: data.supabase_uid,
+                proveedor: 'google',
+                google_foto_url: data.google_foto_url ?? null,
+                google_nombre: data.google_nombre ?? null,
+                rol: data.rol || 'user',
+                activo: data.activo !== false,
+                id_persona: data.id_persona ?? null,
+            });
+            return row.get({ plain: true });
+        } catch (error) {
+            throw new Error('Error al crear usuario Google: ' + error.message);
+        }
+    }
+
     async findByGoogleId(googleId) {
         try {
             const usuario = await UsuarioModel.findOne({

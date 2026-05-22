@@ -5,17 +5,12 @@ const buildApp = require("./src/lib/app");
 
 const startServer = async () => {
     try {
-        // 1️⃣ Conectar a MySQL
         await initMySQL();
-
-        // 2️⃣ Sincronizar modelos (crear/actualizar tablas)
         await syncModels();
 
-        // 3️⃣ Construir app
         const app = buildApp();
 
-        // 4️⃣ Levantar servidor
-        const PORT = process.env.APP_PORT || 3000;
+        const PORT = process.env.PORT || process.env.APP_PORT || 3000;
         app.listen(PORT, () => {
             console.log(`🚀 Servidor levantado en puerto ${PORT}`);
 

@@ -30,15 +30,15 @@ const RutaAprendizajeModel = db.define(
             allowNull: true,
         },
         json_ruta: {
-            type: DataTypes.TEXT('long'),
+            type: DataTypes.TEXT,
             allowNull: false,
         },
         progreso_fases: {
-            type: DataTypes.TEXT('long'),
+            type: DataTypes.TEXT,
             allowNull: true,
         },
         estado: {
-            type: DataTypes.ENUM('activa', 'completada', 'archivada'),
+            type: DataTypes.STRING(20),
             allowNull: false,
             defaultValue: 'activa',
         },

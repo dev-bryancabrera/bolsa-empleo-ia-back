@@ -23,7 +23,7 @@ const ChatModel = db.define(
             defaultValue: 'activo',
         },
         configuracion: {
-            type: DataTypes.TEXT('long'),
+            type: DataTypes.TEXT,
             allowNull: true,
         },
         created_at: {

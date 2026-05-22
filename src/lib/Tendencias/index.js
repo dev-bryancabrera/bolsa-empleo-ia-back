@@ -1,6 +1,6 @@
 const TendenciaRepositorySequelize = require('./infrastructure/TendenciaRepositorySequelize');
 const PersonaRepositorySequelize = require('../Persona/infrastructure/PersonaRepositorySequelize');
-const CVRepositorySequelize = require('../cv/infrastructure/CVRepositorySequelize');
+const CVRepositorySequelize = require('../CV/infrastructure/CVRepositorySequelize');
 const HabilidadesRepositorySequelize = require('../CV/infrastructure/HabilidadesRepositorySequelize');
 const ConfiguracionIARepositorySequelize = require('../ConfiguracionIA/infrastructure/repositories/ConfiguracionIARepositorySequelize');
 const GroqService = require('../../infrastructure/services/GroqService');

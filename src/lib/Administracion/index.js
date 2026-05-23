@@ -9,6 +9,9 @@ const ObtenerUsuarioPersona = require('./application/use-cases/users/ObtenerUsua
 const ObtenerPersonaPorUsuario = require('./application/use-cases/users/ObtenerPersonaPorUsuario');
 const ActualizarUsuario = require('./application/use-cases/users/ActualizarUsuario');
 const EliminarUsuario = require('./application/use-cases/users/EliminarUsuario');
+const AnalizarCVs = require('./application/use-cases/admin/AnalizarCVs');
+
+const GroqService = require('../../infrastructure/services/GroqService');
 
 // Casos de uso de Autenticación
 const Login = require('./application/use-cases/auth/Login');
@@ -39,6 +42,8 @@ module.exports = function registerAdministracionModule(app) {
     const obtenerPersonaPorUsuario = new ObtenerPersonaPorUsuario(usuarioRepository);
     const actualizarUsuario = new ActualizarUsuario(usuarioRepository, personaRepository);
     const eliminarUsuario = new EliminarUsuario(usuarioRepository);
+    const groqService = new GroqService();
+    const analizarCVs = new AnalizarCVs(groqService);
 
     // Casos de uso de Autenticación
     const login = new Login(usuarioRepository);
@@ -57,6 +62,7 @@ module.exports = function registerAdministracionModule(app) {
         obtenerPersonaPorUsuario,
         actualizarUsuario,
         eliminarUsuario,
+        analizarCVs,
     });
 
     const authController = new AuthController({

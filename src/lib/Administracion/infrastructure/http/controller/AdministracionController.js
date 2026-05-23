@@ -7,6 +7,7 @@ class AdministracionController {
         obtenerPersonaPorUsuario,
         actualizarUsuario,
         eliminarUsuario,
+        analizarCVs,
     }) {
         this.crearUsuario = crearUsuario;
         this.listarUsuarios = listarUsuarios;
@@ -15,6 +16,7 @@ class AdministracionController {
         this.obtenerPersonaPorUsuario = obtenerPersonaPorUsuario;
         this.actualizarUsuario = actualizarUsuario;
         this.eliminarUsuario = eliminarUsuario;
+        this.analizarCVs = analizarCVs;
     }
 
     crear = async (req, res, next) => {
@@ -105,6 +107,16 @@ class AdministracionController {
                 return res.status(404).json({ message: 'Usuario no encontrado' });
             }
             res.status(204).send();
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    analizar = async (req, res, next) => {
+        try {
+            const { consulta } = req.body;
+            const resultado = await this.analizarCVs.execute(consulta);
+            res.json({ success: true, data: resultado });
         } catch (error) {
             next(error);
         }

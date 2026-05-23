@@ -33,6 +33,11 @@ class ActualizarUsuario {
             }
         }
 
+        // Serialize array fields to JSON strings for TEXT storage
+        if (Array.isArray(dto.modulos_permitidos)) {
+            dto.modulos_permitidos = JSON.stringify(dto.modulos_permitidos);
+        }
+
         return this.usuarioRepository.actualizar(id, dto);
     }
 }

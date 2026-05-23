@@ -58,6 +58,12 @@ const UsuarioModel = db.define(
             allowNull: false,
             defaultValue: 'local',
         },
+        // Módulos habilitados para el usuario (JSON array, null = todos permitidos)
+        modulos_permitidos: {
+            type: DataTypes.TEXT,
+            allowNull: true,
+            defaultValue: null,
+        },
         // Campos recuperación de contraseña
         reset_token: {
             type: DataTypes.STRING(191), // utf8mb4: max seguro para índices

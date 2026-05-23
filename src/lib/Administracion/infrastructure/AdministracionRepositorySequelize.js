@@ -76,7 +76,6 @@ class UsuarioRepositorySequelize {
     async findAll() {
         try {
             const usuarios = await UsuarioModel.findAll({
-                where: { activo: true },
                 attributes: { exclude: ['password'] },
                 include: [{ model: PersonaModel, as: 'persona' }]
             });
@@ -88,8 +87,7 @@ class UsuarioRepositorySequelize {
 
     async findById(id) {
         try {
-            const usuario = await UsuarioModel.findOne({
-                where: { id, activo: true },
+            const usuario = await UsuarioModel.findByPk(id, {
                 attributes: { exclude: ['password'] }
             });
             return usuario;
@@ -152,13 +150,15 @@ class UsuarioRepositorySequelize {
             if (usuarioData.password) {
                 usuarioData.password = await bcrypt.hash(usuarioData.password, 10);
             }
-            await UsuarioModel.update(usuarioData, {
-                where: { id, activo: true }
-            });
+            await UsuarioModel.update(usuarioData, { where: { id } });
             return await this.findById(id);
         } catch (error) {
             throw new Error('Error al actualizar usuario: ' + error.message);
         }
+    }
+
+    async actualizar(id, usuarioData) {
+        return this.update(id, usuarioData);
     }
 
     // ─── Recuperación de contraseña ────────────────────────────────────────

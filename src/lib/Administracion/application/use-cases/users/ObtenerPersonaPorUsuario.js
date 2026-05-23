@@ -6,7 +6,7 @@ class ObtenerPersonaPorUsuario {
     async execute(userId) {
         const usuario = await this.usuarioRepository.findPersonByUserId(userId);
         if (!usuario) {
-            throw new Error('No se encontró usuario para esta persona');
+            throw new Error('Usuario no encontrado');
         }
         return usuario;
     }

@@ -1,4 +1,5 @@
 const bcrypt = require('bcrypt');
+const PersonaModel = require('../../models/PersonaModel');
 
 async function crearAdminPorDefecto(UsuarioModel, supabase) {
     try {
@@ -7,6 +8,19 @@ async function crearAdminPorDefecto(UsuarioModel, supabase) {
         });
 
         if (adminExistente && adminExistente.supabase_uid) {
+            // Asegurar que el admin tenga una persona asociada
+            if (!adminExistente.id_persona) {
+                const persona = await PersonaModel.create({
+                    nombre: 'Admin',
+                    apellido: 'Sistema',
+                    identificacion: 'ADMIN-' + Date.now(),
+                });
+                await UsuarioModel.update(
+                    { id_persona: persona.id },
+                    { where: { id: adminExistente.id } }
+                );
+                console.log('✓ Persona creada y vinculada al admin');
+            }
             console.log('✓ Usuario admin ya existe y está vinculado a Supabase');
             return;
         }
@@ -43,12 +57,18 @@ async function crearAdminPorDefecto(UsuarioModel, supabase) {
 
         // Crear admin desde cero
         const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
+        const personaAdmin = await PersonaModel.create({
+            nombre: 'Admin',
+            apellido: 'Sistema',
+            identificacion: 'ADMIN-' + Date.now(),
+        });
         await UsuarioModel.create({
             email: process.env.ADMIN_EMAIL,
             password: hashedPassword,
             supabase_uid: supabaseUid,
             rol: 'admin',
             activo: true,
+            id_persona: personaAdmin.id,
         });
 
         console.log('✓ Usuario admin creado exitosamente');

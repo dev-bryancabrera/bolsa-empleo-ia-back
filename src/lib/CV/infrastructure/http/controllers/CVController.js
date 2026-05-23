@@ -75,8 +75,8 @@ class CVController {
             const cv = await this.obtenerCVCompletoPorUsuario.execute(req.params.usuarioId);
             res.status(200).json(cv);
         } catch (error) {
-            const msg = error?.message || '';
-            if (msg.includes('no encontró') || msg.includes('not found') || msg.includes('CV_NOT_FOUND')) {
+            const msg = (error?.message || '').toLowerCase();
+            if (msg.includes('no encontró') || msg.includes('not found') || msg.includes('cv_not_found')) {
                 return res.status(404).json({ success: false, mensaje: 'CV no encontrado' });
             }
             next(error);

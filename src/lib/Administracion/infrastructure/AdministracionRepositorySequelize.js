@@ -119,7 +119,7 @@ class UsuarioRepositorySequelize {
                 include: [{
                     model: PersonaModel,
                     as: 'persona',
-                    required: true
+                    required: false
                 }]
             });
 

@@ -34,6 +34,10 @@ const CVModel = db.define(
             type: DataTypes.STRING(100),
             allowNull: true,
         },
+        email: {
+            type: DataTypes.STRING(150),
+            allowNull: true,
+        },
         telefono: {
             type: DataTypes.STRING(20),
             allowNull: true,

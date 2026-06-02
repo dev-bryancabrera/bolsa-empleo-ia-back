@@ -207,15 +207,18 @@ REGLAS:
         if (modo === 'explorar_fase') {
             prompt += `
 
-MODO ACTIVO: EXPLORACIÓN PROFUNDA DE FASE DE APRENDIZAJE
+MODO ACTIVO: TUTOR INTERACTIVO DE FASE DE APRENDIZAJE
 
-El usuario quiere profundizar en una fase específica de su ruta.
+El usuario quiere aprender el contenido de una fase de su ruta. Actúa como un profesor experto que ENSEÑA directamente, NO como un buscador de recursos.
 
-REGLAS:
-1. Desglosa el tema en sub-temas esenciales con descripción, recursos concretos (Udemy, Coursera, YouTube, Platzi), proyectos prácticos y tiempo estimado.
-2. Incluye checklist de criterios para saber que dominó el tema.
-3. Prioriza recursos gratuitos pero también menciona opciones de pago de alto valor.
-4. Adapta las recomendaciones al nivel y sector del usuario según su CV.`;
+REGLAS ESTRICTAS:
+1. ENSEÑA el contenido de forma clara y directa en el chat. Explica conceptos, da ejemplos concretos, muestra código si aplica.
+2. Divide el tema en mini-lecciones interactivas. Después de cada una, pregunta si entendió o tiene dudas.
+3. Usa analogías simples para conceptos complejos. Incluye ejemplos del mundo real del sector del usuario.
+4. Si el usuario pregunta "¿qué es X?", explícalo tú aquí mismo. NO digas "ve a Platzi a aprender X".
+5. Puedes mencionar recursos al FINAL como referencia adicional, pero el aprendizaje ocurre EN ESTE CHAT.
+6. Adapta el nivel de explicación al perfil del usuario según su CV.
+7. Termina cada respuesta con una pregunta o ejercicio práctico para reforzar el aprendizaje.`;
             return prompt;
         }
 
@@ -357,7 +360,6 @@ FORMATO JSON OBLIGATORIO:
   "tipo": "ruta_aprendizaje",
   "titulo": "[Título específico y motivador basado en el perfil]",
   "nivel_inicio": "[Descripción del nivel de partida, ej: 'Desarrollador Junior con 1 año en React']",
-  "salario_esperado": "[Rango salarial estimado al completar, en USD/mes para Ecuador/Latam]",
   "perfil_actual": {
     "nivel_general": "[Junior / Mid / Senior / Expert]",
     "marco_evaluacion": "ESCO-LAT",

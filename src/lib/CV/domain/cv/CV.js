@@ -1,7 +1,7 @@
 class CV {
     constructor({
         id, persona_id, titulo_profesional, resumen_profesional, nivel_educacion, anios_experiencia, sector_profesional,
-        telefono, linkedin_url, github_url, portfolio_url, ciudad, pais, disponibilidad, modalidad_trabajo,
+        email, telefono, linkedin_url, github_url, portfolio_url, ciudad, pais, disponibilidad, modalidad_trabajo,
         estado, created_at
     }) {
         this.id = id;
@@ -11,6 +11,7 @@ class CV {
         this.nivel_educacion = nivel_educacion;
         this.anios_experiencia = anios_experiencia;
         this.sector_profesional = sector_profesional;
+        this.email = email;
         this.telefono = telefono;
         this.linkedin_url = linkedin_url;
         this.github_url = github_url;

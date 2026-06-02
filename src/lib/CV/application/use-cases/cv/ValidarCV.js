@@ -1,3 +1,8 @@
+const ExperienciaLaboralModel = require('../../../../../infrastructure/models/ExperienciaLaboralModel');
+const EducacionModel = require('../../../../../infrastructure/models/EducacionModel');
+const IdiomaModel = require('../../../../../infrastructure/models/IdiomaModel');
+const CertificacionModel = require('../../../../../infrastructure/models/CertificacionModel');
+
 class ValidarCV {
     constructor(cvRepository, iaService) {
         this.cvRepository = cvRepository;
@@ -5,14 +10,20 @@ class ValidarCV {
     }
 
     async execute(cvId) {
-        // 1. Obtener CV y habilidades
+        // 1. Obtener CV, habilidades y todas las secciones
         const cv = await this.cvRepository.obtenerPorId(cvId);
         if (!cv) throw new Error('CV no encontrado');
 
-        const habilidades = await this.cvRepository.obtenerHabilidades(cvId);
+        const [habilidades, experiencias, educaciones, idiomas, certificaciones] = await Promise.all([
+            this.cvRepository.obtenerHabilidades(cvId),
+            ExperienciaLaboralModel.findAll({ where: { id_cv: cvId } }).then(r => r.map(x => x.get({ plain: true }))),
+            EducacionModel.findAll({ where: { id_cv: cvId } }).then(r => r.map(x => x.get({ plain: true }))),
+            IdiomaModel.findAll({ where: { id_cv: cvId } }).then(r => r.map(x => x.get({ plain: true }))),
+            CertificacionModel.findAll({ where: { id_cv: cvId } }).then(r => r.map(x => x.get({ plain: true }))),
+        ]);
 
         // 2. Construir texto del CV para análisis
-        const textoCv = this._buildCvText(cv, habilidades);
+        const textoCv = this._buildCvText(cv, habilidades, experiencias, educaciones, idiomas, certificaciones);
 
         // 3. Solicitar análisis a la IA
         const anio = new Date().getFullYear();
@@ -63,10 +74,41 @@ Genera entre 4 y 7 sugerencias concretas y accionables, referenciando las tenden
         return this._parseRespuesta(respuestaRaw);
     }
 
-    _buildCvText(cv, habilidades) {
+    _buildCvText(cv, habilidades, experiencias, educaciones, idiomas, certificaciones) {
         const habilidadesTexto = habilidades.length > 0
             ? habilidades.map(h => `  - ${h.nombre} | ${h.categoria} | ${h.nivel} | ${h.anios_experiencia} años`).join('\n')
             : '  (sin habilidades registradas)';
+
+        const experienciasTexto = experiencias.length > 0
+            ? experiencias.map(e => {
+                const fin = e.es_trabajo_actual ? 'Presente' : (e.fecha_fin || 'No especificado');
+                return `  - ${e.cargo} en ${e.empresa} (${e.fecha_inicio} — ${fin})${e.descripcion ? '\n    ' + e.descripcion : ''}`;
+            }).join('\n')
+            : '  (sin experiencias registradas)';
+
+        const educacionesTexto = educaciones.length > 0
+            ? educaciones.map(e => {
+                const fin = e.en_curso ? 'En curso' : (e.fecha_fin || '');
+                return `  - ${e.titulo} — ${e.institucion} (${e.nivel}) ${e.fecha_inicio}${fin ? ' — ' + fin : ''}`;
+            }).join('\n')
+            : '  (sin educación registrada)';
+
+        const idiomasTexto = idiomas.length > 0
+            ? idiomas.map(i => `  - ${i.nombre}: ${i.nivel}`).join('\n')
+            : '  (sin idiomas registrados)';
+
+        const certificacionesTexto = certificaciones.length > 0
+            ? certificaciones.map(c => `  - ${c.nombre}${c.emisor ? ' por ' + c.emisor : ''}${c.fecha ? ' (' + c.fecha + ')' : ''}`).join('\n')
+            : '  (sin certificaciones registradas)';
+
+        const contacto = [
+            cv.email ? `Email: ${cv.email}` : null,
+            cv.telefono ? `Teléfono: ${cv.telefono}` : null,
+            cv.linkedin_url ? `LinkedIn: ${cv.linkedin_url}` : null,
+            cv.github_url ? `GitHub: ${cv.github_url}` : null,
+            cv.portfolio_url ? `Portfolio: ${cv.portfolio_url}` : null,
+            cv.ciudad || cv.pais ? `Ubicación: ${[cv.ciudad, cv.pais].filter(Boolean).join(', ')}` : null,
+        ].filter(Boolean).join(' | ') || 'No especificado';
 
         return `
 TÍTULO PROFESIONAL: ${cv.titulo_profesional || 'No especificado'}
@@ -74,8 +116,23 @@ RESUMEN PROFESIONAL: ${cv.resumen_profesional || 'No especificado'}
 AÑOS DE EXPERIENCIA: ${cv.anios_experiencia ?? 'No especificado'}
 NIVEL DE EDUCACIÓN: ${cv.nivel_educacion || 'No especificado'}
 SECTOR PROFESIONAL: ${cv.sector_profesional || 'No especificado'}
+CONTACTO: ${contacto}
+DISPONIBILIDAD: ${cv.disponibilidad || 'No especificado'} | MODALIDAD: ${cv.modalidad_trabajo || 'No especificada'}
+
 HABILIDADES:
 ${habilidadesTexto}
+
+EXPERIENCIA LABORAL:
+${experienciasTexto}
+
+EDUCACIÓN:
+${educacionesTexto}
+
+IDIOMAS:
+${idiomasTexto}
+
+CERTIFICACIONES:
+${certificacionesTexto}
         `.trim();
     }
 

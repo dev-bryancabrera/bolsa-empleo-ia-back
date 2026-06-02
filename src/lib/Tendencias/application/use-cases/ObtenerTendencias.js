@@ -29,6 +29,8 @@ class ObtenerTendencias {
                 tendencias_sector: JSON.parse(tendencia.tendencias_sector),
                 datos_interesantes: JSON.parse(tendencia.datos_interesantes || '[]'),
                 insights_personalizados: JSON.parse(tendencia.insights_personalizados),
+                vacantes_reales: JSON.parse(tendencia.vacantes_reales || '[]'),
+                cursos_youtube: JSON.parse(tendencia.cursos_youtube || '[]'),
                 fecha_generacion: tendencia.fecha_generacion,
                 vigente_hasta: tendencia.vigente_hasta
             };

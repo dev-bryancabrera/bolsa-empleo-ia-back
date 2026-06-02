@@ -47,6 +47,14 @@ const TendenciaModel = db.define('Tendencia', {
         type: DataTypes.TEXT,
         allowNull: true
     },
+    vacantes_reales: {
+        type: DataTypes.TEXT,
+        allowNull: true
+    },
+    cursos_youtube: {
+        type: DataTypes.TEXT,
+        allowNull: true
+    },
     insights_personalizados: {
         type: DataTypes.TEXT,
         allowNull: false

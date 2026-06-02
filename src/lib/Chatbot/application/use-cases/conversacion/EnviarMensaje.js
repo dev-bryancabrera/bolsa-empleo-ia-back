@@ -1,4 +1,5 @@
 const IAServiceFactory = require('../../../../../infrastructure/services/IAServiceFactory');
+const EmbeddingService = require('../../../../../infrastructure/services/EmbeddingService');
 
 class EnviarMensaje {
     constructor(conversacionRepository, cvRepository, iaService, configuracionRepository = null, tendenciaRepository = null) {
@@ -7,6 +8,11 @@ class EnviarMensaje {
         this.iaService = iaService;
         this.configuracionRepository = configuracionRepository;
         this.tendenciaRepository = tendenciaRepository;
+        try {
+            this.embeddingService = new EmbeddingService();
+        } catch {
+            this.embeddingService = null;
+        }
     }
 
     async execute(personaId, chatId, mensajeUsuario, esNuevaConversacion = false, modo = null) {
@@ -79,8 +85,22 @@ class EnviarMensaje {
             .filter(m => m.mensaje !== '__INIT__')
             .sort((a, b) => new Date(a.metadata.fecha) - new Date(b.metadata.fecha));
 
-        // 7. Construir mensajes
-        const promptSistema = this._obtenerPromptSistema(contexto, modo);
+        // 7. Recuperar contexto RAG de conversaciones/análisis similares previos
+        let contextoRAG = '';
+        if (this.embeddingService && cvCompleto) {
+            const consultaRAG = `${mensajeUsuario} ${cvCompleto.titulo_profesional || ''} ${cvCompleto.sector_profesional || ''}`;
+            const similares = await this.embeddingService.buscarSimilares({
+                consulta: consultaRAG,
+                tipo: 'chatbot',
+                sector: cvCompleto.sector_profesional,
+                limite: 2,
+            });
+            const fragmentoRAG = this.embeddingService.formatearContextoRAG(similares);
+            if (fragmentoRAG) contextoRAG = fragmentoRAG;
+        }
+
+        // 8. Construir mensajes
+        const promptSistema = this._obtenerPromptSistema(contexto, modo, contextoRAG);
         const messages = [{ role: 'system', content: promptSistema }];
 
         for (const msg of historialFiltrado) {
@@ -89,10 +109,23 @@ class EnviarMensaje {
         }
         messages.push({ role: 'user', content: mensajeUsuario });
 
-        // 8. Llamar a la IA
+        // 9. Llamar a la IA
         const respuestaIA = await servicioIA.generarRespuestaConHistorial(messages, { maxTokens: 3000 });
 
-        // 9. Detectar si la respuesta es JSON de ruta de aprendizaje
+        // 10. Guardar embedding de esta interacción para RAG futuro
+        if (this.embeddingService && cvCompleto) {
+            const resumenInteraccion = `Pregunta: ${mensajeUsuario.slice(0, 300)}. Respuesta: ${respuestaIA.slice(0, 500)}`;
+            this.embeddingService.guardarEmbedding({
+                tipo: 'chatbot',
+                personaId,
+                sector: cvCompleto.sector_profesional,
+                tituloProfesional: cvCompleto.titulo_profesional,
+                contenido: resumenInteraccion,
+                metadata: { modo: modo || 'general', chat_id: chatId },
+            }).catch(() => {});
+        }
+
+        // 11. Detectar si la respuesta es JSON de ruta de aprendizaje
         let esJSON = 0;
         try {
             const jsonMatch = respuestaIA.match(/\{[\s\S]*"tipo"\s*:\s*"ruta_aprendizaje"[\s\S]*\}/);
@@ -116,19 +149,38 @@ class EnviarMensaje {
         });
     }
 
-    _obtenerPromptSistema(contexto, modo = null) {
+    _obtenerPromptSistema(contexto, modo = null, contextoRAG = '') {
         const anio = new Date().getFullYear();
 
         const siguienteAnio = anio + 1;
-        let prompt = `Eres una IA especializada en orientación profesional y cierre de brechas competenciales para el mercado laboral de Ecuador y Latinoamérica. Tu conocimiento es siempre el más actualizado disponible, incluyendo tendencias ya establecidas y las que se proyectan hacia el futuro próximo.
+        let prompt = `Eres una IA especializada en orientación profesional y cierre de brechas competenciales para el mercado laboral de Ecuador y Latinoamérica. Usas el marco ESCO (European Skills, Competences, Qualifications and Occupations) adaptado a Latam como taxonomía estándar para clasificar y evaluar competencias.
 
-Tu enfoque central es: analizar el perfil real del profesional, identificar las brechas frente al mercado actual y emergente (${anio}-${siguienteAnio}), y guiarlo con una ruta personalizada que cierre esas brechas tanto para el presente como para lo que viene.
+MARCO ESCO-LAT — TAXONOMÍA Y ALGORITMO DE BRECHA:
+Clasifica cada competencia en K-S-C:
+  K (Knowledge): lo que el profesional SABE conceptualmente
+  S (Skill): lo que PUEDE HACER de forma técnica y aplicada
+  C (Competence): cómo lo APLICA con autonomía y responsabilidad
 
-Contexto de mercado actual: Ecuador y países de Latinoamérica enfrentan una transformación laboral acelerada por la IA generativa (ChatGPT, Copilot, Gemini y modelos emergentes), la automatización de tareas repetitivas, y la demanda creciente de perfiles con skills digitales. Las certificaciones en la nube (AWS, Azure, GCP), el manejo de herramientas de IA y los skills de data son las competencias más demandadas. El trabajo remoto/híbrido sigue expandiendo las oportunidades para profesionales latinoamericanos en empresas globales. Basa tus respuestas en lo que sabes hasta tu fecha de corte, pero proyecta tendencias hacia ${siguienteAnio} cuando sea relevante.
-Salarios referenciales: en USD/mes para el mercado local de Ecuador y opciones remotas para mercados globales.
-Recursos de aprendizaje priorizados: Platzi, Coursera, Udemy, YouTube (tutoriales más recientes disponibles), documentación oficial actualizada.
-Tono: claro, pedagógico, motivador y orientado al crecimiento profesional real.
-Todas tus recomendaciones deben basarse EXCLUSIVAMENTE en el CV proporcionado.`;
+Escala de dominio EQF (1-4):
+  1-Básico | 2-Funcional | 3-Avanzado | 4-Experto
+
+Algoritmo de gap por competencia:
+  gap_score = max(0, nivel_requerido − nivel_actual)
+  puntuacion_empleabilidad = 100 − (Σ gap_scores / n_competencias × 25)
+  prioridad_cierre = gap_score × factor_impacto (Alto=3, Medio=2, Bajo=1)
+
+Este algoritmo determina QUÉ aprender primero, en qué orden y por qué. Úsalo internamente para ordenar cualquier ruta de aprendizaje y análisis de brecha que generes.
+
+CONTEXTO DE MERCADO ${anio}-${siguienteAnio}:
+Ecuador y Latam enfrentan transformación laboral acelerada: IA generativa (modelos LLM, agentes, RAG), automatización de tareas repetitivas, demanda creciente de data literacy, cloud (AWS, Azure, GCP) y ciberseguridad. El trabajo remoto/híbrido expande oportunidades para profesionales latinoamericanos en empresas globales.
+Salarios referenciales en USD/mes para Ecuador y opciones remotas.
+Recursos priorizados: Platzi, Coursera, Udemy, YouTube, documentación oficial.
+Tono: claro, pedagógico, motivador y orientado al crecimiento real.
+Todas tus recomendaciones deben basarse EXCLUSIVAMENTE en el CV y datos del usuario proporcionados.`;
+
+        if (contextoRAG) {
+            prompt += `\n\n${contextoRAG}`;
+        }
 
         // ── MODO ENTREVISTA ──────────────────────────────────────────────
         if (modo === 'entrevista') {
@@ -226,36 +278,53 @@ Si pide una ruta, responde: "Para generar tu ruta personalizada necesito que pri
             ? cv.habilidades.map(h => `• ${h.nombre} | Categoría: ${h.categoria} | Nivel: ${h.nivel} | ${h.anios} años`).join('\n')
             : 'Sin habilidades técnicas registradas.';
 
-        // Inyectar análisis de brechas previo si existe
+        // Inyectar análisis de brechas previo si existe (contexto RAG desde módulo de tendencias)
         let contextoBrechas = '';
         if (analisisBrechas?.brechas_criticas?.length > 0) {
-            const brechasCriticas = analisisBrechas.brechas_criticas
-                .filter(b => b.impacto_empleabilidad === 'Alto')
-                .map(b => `• ${b.competencia} (nivel actual: ${b.nivel_actual} → requerido: ${b.nivel_requerido}, cierre: ${b.tiempo_cierre_estimado})`)
+            const brechasOrdenadas = [...analisisBrechas.brechas_criticas]
+                .sort((a, b) => (b.prioridad_cierre ?? 0) - (a.prioridad_cierre ?? 0));
+
+            const brechasCriticas = brechasOrdenadas
+                .map(b => {
+                    const gap = b.gap_score != null ? ` | gap_score=${b.gap_score}` : '';
+                    const tipo = b.tipo_esco ? ` [${b.tipo_esco}]` : '';
+                    return `• ${b.competencia}${tipo}: ${b.nivel_actual}→${b.nivel_requerido}${gap} | cierre: ${b.tiempo_cierre_estimado} | impacto: ${b.impacto_empleabilidad}`;
+                })
                 .join('\n');
 
             contextoBrechas = `
 
-ANÁLISIS DE BRECHAS PREVIO (del módulo de tendencias):
-- Puntuación de empleabilidad actual: ${analisisBrechas.puntuacion_empleabilidad_actual}/100
-- Puntuación potencial al cerrar brechas: ${analisisBrechas.puntuacion_empleabilidad_potencial}/100
-- Brechas críticas identificadas:
-${brechasCriticas || '  Ninguna crítica identificada'}
-- Resumen: ${analisisBrechas.resumen_brecha || ''}
+CONTEXTO RAG — ANÁLISIS DE BRECHAS (marco ESCO-LAT, módulo de tendencias):
+- Marco: ${analisisBrechas.marco_referencia || 'ESCO-LAT'}
+- Puntuación empleabilidad actual: ${analisisBrechas.puntuacion_empleabilidad_actual}/100
+- Puntuación potencial (brechas cerradas): ${analisisBrechas.puntuacion_empleabilidad_potencial}/100
+- Gap total: ${analisisBrechas.gap_total ?? 'N/D'}
+- Brechas ordenadas por prioridad (gap_score × impacto):
+${brechasCriticas || '  Ninguna brecha crítica registrada'}
+- Diagnóstico: ${analisisBrechas.resumen_brecha || ''}
 
-La ruta de aprendizaje DEBE cerrar estas brechas en orden de prioridad.`;
+INSTRUCCIÓN: La ruta de aprendizaje DEBE cerrar estas brechas en el orden exacto de prioridad_cierre (mayor primero). Cada fase debe referenciar al menos una brecha que cierra.`;
         }
 
         prompt += `
 
+DETECCIÓN DE ESTADO DEL FLUJO — LEE EL HISTORIAL ANTES DE RESPONDER:
+Si en el historial el asistente ya mostró el formulario de preguntas (⏱️ horas, 🗓️ tiempo, 🎯 objetivo, 📚 estilo, 🚀 tecnología) Y el mensaje actual del usuario contiene una respuesta a ese formulario (números separados por comas, con o sin texto adicional, ej: "2, 3, 1, 3, Python" o "3,2,1,3,0" o "horas: 2 / tiempo: 3 / ..."):
+→ OMITE el PASO 1 y el PASO 2.
+→ Ve DIRECTAMENTE al PASO 3: interpreta las respuestas (en orden: horas/semana, tiempo objetivo, objetivo principal, estilo de aprendizaje, tecnología) y genera el JSON completo de ruta de aprendizaje.
+→ NUNCA vuelvas a mostrar el formulario si el usuario ya respondió.
+→ NUNCA digas "Por favor, responde a estas preguntas" si el historial muestra que ya las respondieron.
+
 PROCESO OBLIGATORIO AL SOLICITAR UNA RUTA:
 
-PASO 1 — DIAGNÓSTICO INTERNO (antes de responder):
-1. Identifica competencias actuales del profesional según su CV.
-2. Determina el rol objetivo más probable para su perfil en el mercado latinoamericano.
-3. Lista las competencias que ese mercado exige para el rol en ${anio}.
-4. Calcula las brechas: qué tiene vs. qué necesita.
-5. Define el orden de cierre por impacto laboral real.
+PASO 1 — DIAGNÓSTICO INTERNO ESCO-LAT (antes de responder, no lo muestres al usuario):
+1. Lista las competencias actuales del CV con su clasificación K/S/C y nivel EQF (1-4).
+2. Determina el rol objetivo más probable en el mercado latinoamericano para este perfil.
+3. Lista las competencias que ese rol exige en ${anio} con nivel EQF requerido.
+4. Calcula gap_score por competencia: max(0, nivel_requerido − nivel_actual).
+5. Ordena las brechas por prioridad_cierre = gap_score × factor_impacto (Alto=3, Medio=2, Bajo=1).
+6. Calcula puntuacion_empleabilidad = 100 − (Σ gap_scores / n_competencias × 25).
+7. Si existe el CONTEXTO RAG de brechas previo, úsalo como base y actualiza si el CV tiene cambios.
 
 PASO 2 — FORMULARIO (cuando el usuario pida una ruta):
 Presenta TODAS las preguntas en UN ÚNICO mensaje:
@@ -280,7 +349,8 @@ Presenta TODAS las preguntas en UN ÚNICO mensaje:
 ---
 
 PASO 3 — GENERAR JSON:
-Con las respuestas del usuario, genera el JSON completo inmediatamente. No hagas preguntas adicionales.
+Con las respuestas del formulario (detectadas en el historial), genera el JSON completo inmediatamente.
+NO muestres el formulario de nuevo. NO pidas más información. NO digas "Por favor responde". Genera el JSON directo.
 
 FORMATO JSON OBLIGATORIO:
 {
@@ -290,9 +360,20 @@ FORMATO JSON OBLIGATORIO:
   "salario_esperado": "[Rango salarial estimado al completar, en USD/mes para Ecuador/Latam]",
   "perfil_actual": {
     "nivel_general": "[Junior / Mid / Senior / Expert]",
-    "fortalezas_clave": ["[fortaleza específica del CV]"],
-    "brechas_identificadas": ["[brecha concreta identificada vs mercado actual ${anio}-${siguienteAnio}]"],
-    "puntuacion_empleabilidad": 0
+    "marco_evaluacion": "ESCO-LAT",
+    "fortalezas_clave": ["[fortaleza específica del CV con clasificación K/S/C]"],
+    "brechas_identificadas": [
+      {
+        "competencia": "[nombre de la brecha]",
+        "tipo_esco": "K|S|C",
+        "nivel_actual_num": 0,
+        "nivel_requerido_num": 0,
+        "gap_score": 0,
+        "prioridad_cierre": 0
+      }
+    ],
+    "puntuacion_empleabilidad": 0,
+    "gap_total": 0
   },
   "objetivo_profesional": "[Objetivo claro y medible]",
   "duracion_estimada_meses": 0,
@@ -303,7 +384,16 @@ FORMATO JSON OBLIGATORIO:
       "duracion_meses": 0,
       "nivel_dificultad": "[Básico / Intermedio / Avanzado]",
       "objetivo": "[Qué logrará al terminar esta fase]",
-      "competencias_a_desarrollar": ["[competencia técnica específica que cierra una brecha]"],
+      "brechas_que_cierra": ["[nombre de la brecha del CONTEXTO RAG que esta fase resuelve]"],
+      "competencias_a_desarrollar": [
+        {
+          "nombre": "[competencia técnica]",
+          "tipo_esco": "K|S|C",
+          "nivel_inicial": 0,
+          "nivel_objetivo": 0,
+          "gap_score": 0
+        }
+      ],
       "acciones_recomendadas": ["[acción concreta con recurso/plataforma, gratuita o accesible en Latam]"],
       "recursos_clave": ["[Nombre curso + plataforma + gratis/pago]"],
       "checklist_dominio": ["[Criterio medible para saber que dominó el tema]"],
@@ -316,9 +406,11 @@ FORMATO JSON OBLIGATORIO:
 }
 
 REGLAS DEL JSON:
-- Mínimo 4 fases, máximo 7. Cada fase debe cerrar al menos una brecha identificada.
+- Mínimo 4 fases, máximo 7. Las fases deben estar ordenadas por prioridad_cierre descendente del DIAGNÓSTICO ESCO-LAT.
+- Cada fase DEBE incluir brechas_que_cierra con al menos una brecha del diagnóstico.
+- competencias_a_desarrollar debe incluir gap_score para cada ítem (calculado con la escala EQF).
 - En acciones_recomendadas: recursos reales accesibles en Ecuador/Latam (Platzi, Coursera, Udemy, YouTube).
-- puntuacion_empleabilidad: número 0-100 fundamentado en el CV real.
+- puntuacion_empleabilidad: calculado con 100 − (Σ gap_scores / n_competencias × 25). No usar número arbitrario.
 - No alteres los nombres de los campos. No omitas ningún campo.
 - Después del JSON, pregunta si quiere explorar alguna fase específica.
 ${contextoBrechas}

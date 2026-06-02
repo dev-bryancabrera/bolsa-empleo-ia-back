@@ -1,6 +1,8 @@
 const GroqService = require('./GroqService');
 const OpenAIService = require('./OpenIAService');
 const AnthropicService = require('./AnthropicService');
+const GeminiService = require('./GeminiService');
+// const KimiService = require('./KimiService');
 
 const MODELOS = {
     groq: [
@@ -8,6 +10,13 @@ const MODELOS = {
         { id: 'llama-3.1-8b-instant', nombre: 'Llama 3.1 8B (Rápido)', gratuito: true },
         { id: 'mixtral-8x7b-32768', nombre: 'Mixtral 8x7B', gratuito: true },
         { id: 'gemma2-9b-it', nombre: 'Gemma 2 9B', gratuito: true }
+    ],
+    // kimi: [
+    //     { id: 'moonshotai/kimi-k2.6', nombre: 'Kimi K2 (Alta capacidad)', gratuito: false }
+    // ],
+    gemini: [
+        { id: 'gemini-2.0-flash', nombre: 'Gemini 2.0 Flash (Recomendado, Gratuito)', gratuito: true },
+        { id: 'gemini-1.5-flash', nombre: 'Gemini 1.5 Flash (Gratuito)', gratuito: true }
     ],
     openai: [
         { id: 'gpt-4o', nombre: 'GPT-4o', gratuito: false },
@@ -28,6 +37,10 @@ class IAServiceFactory {
                 return new OpenAIService(apiKey || process.env.OPENAI_API_KEY, modelo);
             case 'anthropic':
                 return new AnthropicService(apiKey || process.env.ANTHROPIC_API_KEY, modelo);
+            case 'gemini':
+                return new GeminiService(apiKey || process.env.GEMINI_API_KEY, modelo);
+            // case 'kimi':
+            //     return new KimiService(apiKey || process.env.NVIDIA_API_KEY, modelo);
             case 'groq':
             default:
                 return new GroqService(apiKey || process.env.GROQ_API_KEY, modelo);
@@ -41,6 +54,8 @@ class IAServiceFactory {
                 return IAServiceFactory.crearServicio(config.proveedor, config.modelo, config.api_key);
             }
         } catch (_) { /* usa servicio por defecto */ }
+        // TODO: volver a GroqService cuando termine de probar Gemini en el chatbot
+        // return new GeminiService(process.env.GEMINI_API_KEY, 'gemini-2.0-flash');
         return new GroqService(process.env.GROQ_API_KEY, 'llama-3.3-70b-versatile');
     }
 
@@ -60,7 +75,9 @@ class IAServiceFactory {
 
     static obtenerProveedores() {
         return [
-            { id: 'groq', nombre: 'Groq (Gratuito)', gratuito: true, descripcion: 'Modelos LLaMA y Mixtral, sin costo' },
+            { id: 'groq', nombre: 'Groq (Gratuito)', gratuito: true, descripcion: 'Modelos LLaMA y Mixtral, sin costo — ideal para chat' },
+            { id: 'gemini', nombre: 'Google Gemini (Gratuito)', gratuito: true, descripcion: 'Gemini 2.0 Flash — 1500 req/día gratis, ideal para análisis de CV' },
+            // { id: 'kimi', nombre: 'Kimi K2 vía NVIDIA (De pago)', gratuito: false, descripcion: 'MoonshotAI Kimi K2 — alta capacidad para análisis complejos' },
             { id: 'openai', nombre: 'OpenAI (De pago)', gratuito: false, descripcion: 'GPT-4o y modelos avanzados de OpenAI' },
             { id: 'anthropic', nombre: 'Anthropic Claude (De pago)', gratuito: false, descripcion: 'Claude Opus, Sonnet y Haiku' }
         ];

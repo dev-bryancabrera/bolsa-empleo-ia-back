@@ -17,6 +17,7 @@
     "bcrypt": "^6.0.0",
     "chart.js": "^4.5.1",
     "chartjs-node-canvas": "^5.0.0",
+    "cohere-ai": "^8.0.0",
     "compression": "^1.8.1",
     "cors": "^2.8.6",
     "date-fns": "^4.1.0",

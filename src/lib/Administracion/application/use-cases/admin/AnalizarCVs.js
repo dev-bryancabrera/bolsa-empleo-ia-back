@@ -2,6 +2,8 @@ const CVModel = require('../../../../../infrastructure/models/CVModel');
 const HabilidadesModel = require('../../../../../infrastructure/models/HabilidadesModel');
 const ExperienciaLaboralModel = require('../../../../../infrastructure/models/ExperienciaLaboralModel');
 const EducacionModel = require('../../../../../infrastructure/models/EducacionModel');
+const GeminiService = require('../../../../../infrastructure/services/GeminiService');
+// const KimiService = require('../../../../../infrastructure/services/KimiService');
 
 class AnalizarCVs {
     constructor(groqService) {
@@ -12,7 +14,7 @@ class AnalizarCVs {
         const rows = await CVModel.findAll({
             include: [
                 { model: HabilidadesModel, as: 'habilidades', attributes: ['nombre', 'categoria', 'nivel'] },
-                { model: ExperienciaLaboralModel, as: 'experiencias', attributes: ['cargo', 'empresa', 'anios_experiencia'] },
+                { model: ExperienciaLaboralModel, as: 'experiencias', attributes: ['cargo', 'empresa', 'fecha_inicio', 'fecha_fin', 'es_trabajo_actual'] },
                 { model: EducacionModel, as: 'educaciones', attributes: ['titulo', 'institucion', 'nivel'] },
             ],
         });
@@ -45,21 +47,31 @@ class AnalizarCVs {
 
         const resumenTexto = JSON.stringify(datos, null, 2);
 
-        const promptSistema = `Eres un analista experto en recursos humanos y mercado laboral.
-Recibirás datos de CVs de una plataforma de empleo y debes analizar las tendencias y patrones.
-IMPORTANTE: Responde SIEMPRE en español y con formato JSON válido exactamente como se especifica.`;
+        const promptSistema = `Eres un analista senior de recursos humanos y mercado laboral de Ecuador y Latinoamérica. Usas el marco ESCO (European Skills, Competences, Qualifications and Occupations) adaptado a Latam como taxonomía estándar para clasificar competencias y medir brechas.
 
-        const mensajeUsuario = `Tienes ${rows.length} CVs de la plataforma. Aquí están los datos resumidos:
+TAXONOMÍA K-S-C de ESCO:
+  K (Knowledge): conocimiento conceptual — lo que el profesional sabe
+  S (Skill): habilidad técnica aplicada — lo que puede hacer
+  C (Competence): autonomía al aplicar K o S — cómo lo aplica
+
+ALGORITMO DE BRECHA COMPETENCIAL ESCO-LAT:
+  gap_score por competencia = max(0, nivel_requerido − nivel_actual) [escala 1-4 EQF]
+  gap_plataforma = Σ gap_scores promedio de todos los CVs por ocupación
+  Usa este algoritmo para identificar qué sectores tienen mayores brechas colectivas.
+
+INSTRUCCIÓN: Responde SIEMPRE en español y con formato JSON válido exactamente como se especifica.`;
+
+        const mensajeUsuario = `Tienes ${rows.length} CVs de la plataforma. Aquí están los datos resumidos (contexto RAG):
 
 ${resumenTexto}
 
 CONSULTA DEL ADMINISTRADOR: ${consulta}
 
-Responde con este JSON exacto:
+Analiza los datos usando el marco ESCO-LAT y responde con este JSON exacto:
 {
   "total_cvs": ${rows.length},
   "resumen_general": "párrafo de 2-3 oraciones resumiendo el perfil general de la plataforma",
-  "respuesta_consulta": "respuesta específica a la consulta del administrador",
+  "respuesta_consulta": "respuesta específica a la consulta del administrador, aplicando el marco ESCO si es relevante",
   "profesiones_top": [
     {"nombre": "...", "cantidad": 0, "porcentaje": 0}
   ],
@@ -67,7 +79,20 @@ Responde con este JSON exacto:
     {"sector": "...", "cantidad": 0}
   ],
   "habilidades_mas_comunes": [
-    {"habilidad": "...", "cantidad": 0}
+    {
+      "habilidad": "...",
+      "cantidad": 0,
+      "tipo_esco": "K|S|C"
+    }
+  ],
+  "brechas_colectivas": [
+    {
+      "competencia": "habilidad o conocimiento que falta en la mayoría de perfiles",
+      "tipo_esco": "K|S|C",
+      "porcentaje_sin_esta_skill": 0,
+      "demanda_mercado": "Alta|Media|Emergente",
+      "impacto_empleabilidad": "Alto|Medio|Bajo"
+    }
   ],
   "distribucion_experiencia": {
     "junior_0_2": 0,
@@ -80,15 +105,18 @@ Responde con este JSON exacto:
     "universitario": 0,
     "postgrado": 0
   },
-  "insights": ["insight 1", "insight 2", "insight 3"],
-  "recomendaciones": "recomendación para mejorar la plataforma o los perfiles"
+  "insights": ["insight 1 con perspectiva ESCO", "insight 2", "insight 3"],
+  "recomendaciones": "recomendación para mejorar los perfiles de la plataforma, basada en las brechas colectivas identificadas"
 }`;
 
-        const respuesta = await this.groqService.generarRespuesta(
-            mensajeUsuario,
-            promptSistema,
-            { maxTokens: 2000, jsonMode: true }
-        );
+        let respuesta;
+        try {
+            const gemini = new GeminiService(process.env.GEMINI_API_KEY, 'gemini-2.0-flash');
+            respuesta = await gemini.generarRespuesta(mensajeUsuario, promptSistema, { maxTokens: 4000, jsonMode: true });
+        } catch (errGemini) {
+            console.warn('⚠️ Gemini no disponible para análisis CV — usando Groq como fallback');
+            respuesta = await this.groqService.generarRespuesta(mensajeUsuario, promptSistema, { maxTokens: 2000, jsonMode: true });
+        }
 
         return JSON.parse(respuesta);
     }

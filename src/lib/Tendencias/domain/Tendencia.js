@@ -9,8 +9,12 @@ class Tendencia {
         habilidades_demandadas,
         plataformas_recomendadas,
         tendencias_sector,
+        analisis_brecha,
         datos_interesantes,
+        vacantes_reales,
+        cursos_youtube,
         insights_personalizados,
+        cv_fingerprint,
         fecha_generacion,
         vigente_hasta,
         created_at,
@@ -18,15 +22,19 @@ class Tendencia {
     }) {
         this.id = id;
         this.persona_id = persona_id;
-        this.estadisticas = estadisticas; // JSON
-        this.rutas_aprendizaje = rutas_aprendizaje; // JSON
-        this.recomendaciones = recomendaciones; // JSON
-        this.empleos_sugeridos = empleos_sugeridos; // JSON
-        this.habilidades_demandadas = habilidades_demandadas; // JSON
-        this.plataformas_recomendadas = plataformas_recomendadas; // JSON
-        this.tendencias_sector = tendencias_sector; // JSON
-        this.datos_interesantes = datos_interesantes; // JSON
-        this.insights_personalizados = insights_personalizados; // JSON
+        this.estadisticas = estadisticas;
+        this.rutas_aprendizaje = rutas_aprendizaje;
+        this.recomendaciones = recomendaciones;
+        this.empleos_sugeridos = empleos_sugeridos;
+        this.habilidades_demandadas = habilidades_demandadas;
+        this.plataformas_recomendadas = plataformas_recomendadas;
+        this.tendencias_sector = tendencias_sector;
+        this.analisis_brecha = analisis_brecha;
+        this.datos_interesantes = datos_interesantes;
+        this.vacantes_reales = vacantes_reales;
+        this.cursos_youtube = cursos_youtube;
+        this.insights_personalizados = insights_personalizados;
+        this.cv_fingerprint = cv_fingerprint;
         this.fecha_generacion = fecha_generacion;
         this.vigente_hasta = vigente_hasta;
         this.created_at = created_at;

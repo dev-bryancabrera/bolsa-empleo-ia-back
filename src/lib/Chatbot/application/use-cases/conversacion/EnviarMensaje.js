@@ -295,18 +295,26 @@ Si pide una ruta, responde: "Para generar tu ruta personalizada necesito que pri
                 })
                 .join('\n');
 
+            const empleabilidadOficial = analisisBrechas.puntuacion_empleabilidad_actual ?? 0;
+            const empleabilidadPotencial = analisisBrechas.puntuacion_empleabilidad_potencial ?? 0;
+
             contextoBrechas = `
 
-CONTEXTO RAG — ANÁLISIS DE BRECHAS (marco ESCO-LAT, módulo de tendencias):
+CONTEXTO CANÓNICO — ANÁLISIS DE BRECHAS OFICIAL (módulo de tendencias, calculado por el sistema):
 - Marco: ${analisisBrechas.marco_referencia || 'ESCO-LAT'}
-- Puntuación empleabilidad actual: ${analisisBrechas.puntuacion_empleabilidad_actual}/100
-- Puntuación potencial (brechas cerradas): ${analisisBrechas.puntuacion_empleabilidad_potencial}/100
+- ▶ EMPLEABILIDAD ACTUAL OFICIAL: ${empleabilidadOficial}/100  ← USA ESTE VALOR EXACTO en el JSON
+- ▶ EMPLEABILIDAD POTENCIAL OFICIAL: ${empleabilidadPotencial}/100  ← USA ESTE VALOR EXACTO en el JSON
 - Gap total: ${analisisBrechas.gap_total ?? 'N/D'}
 - Brechas ordenadas por prioridad (gap_score × impacto):
 ${brechasCriticas || '  Ninguna brecha crítica registrada'}
 - Diagnóstico: ${analisisBrechas.resumen_brecha || ''}
 
-INSTRUCCIÓN: La ruta de aprendizaje DEBE cerrar estas brechas en el orden exacto de prioridad_cierre (mayor primero). Cada fase debe referenciar al menos una brecha que cierra.`;
+INSTRUCCIONES CRÍTICAS PARA LA RUTA:
+1. La ruta DEBE cerrar estas brechas en el orden exacto de prioridad_cierre (mayor primero).
+2. Cada fase debe referenciar en brechas_que_cierra al menos una brecha de la lista anterior.
+3. En el campo "puntuacion_empleabilidad" del JSON escribe EXACTAMENTE ${empleabilidadOficial} — no lo recalcules ni estimes.
+4. Las brechas listadas arriba son la ÚNICA fuente de verdad. No identifiques brechas adicionales desde cero.
+5. Si el usuario genera múltiples rutas, todas deben abordar las MISMAS brechas en el mismo orden de prioridad.`;
         }
 
         prompt += `
@@ -320,14 +328,18 @@ Si en el historial el asistente ya mostró el formulario de preguntas (⏱️ ho
 
 PROCESO OBLIGATORIO AL SOLICITAR UNA RUTA:
 
-PASO 1 — DIAGNÓSTICO INTERNO ESCO-LAT (antes de responder, no lo muestres al usuario):
-1. Lista las competencias actuales del CV con su clasificación K/S/C y nivel EQF (1-4).
+PASO 1 — DIAGNÓSTICO ESCO-LAT (antes de responder, no lo muestres al usuario):
+${analisisBrechas?.brechas_criticas?.length > 0
+    ? `ANÁLISIS YA CALCULADO POR EL SISTEMA — NO lo repitas desde cero:
+- Las brechas canónicas están en el CONTEXTO CANÓNICO de arriba. Úsalas directamente.
+- La puntuacion_empleabilidad oficial es ${analisisBrechas.puntuacion_empleabilidad_actual}/100. No la recalcules.
+- Solo ajusta si el usuario menciona explícitamente que actualizó su CV desde ese análisis.`
+    : `1. Lista las competencias actuales del CV con su clasificación K/S/C y nivel EQF (1-4).
 2. Determina el rol objetivo más probable en el mercado latinoamericano para este perfil.
 3. Lista las competencias que ese rol exige en ${anio} con nivel EQF requerido.
 4. Calcula gap_score por competencia: max(0, nivel_requerido − nivel_actual).
 5. Ordena las brechas por prioridad_cierre = gap_score × factor_impacto (Alto=3, Medio=2, Bajo=1).
-6. Calcula puntuacion_empleabilidad = 100 − (Σ gap_scores / n_competencias × 25).
-7. Si existe el CONTEXTO RAG de brechas previo, úsalo como base y actualiza si el CV tiene cambios.
+6. Calcula puntuacion_empleabilidad = 100 − (Σ gap_scores / n_competencias × 25).`}
 
 PASO 2 — FORMULARIO (cuando el usuario pida una ruta):
 Presenta TODAS las preguntas en UN ÚNICO mensaje:

@@ -72,6 +72,10 @@ const TendenciaModel = db.define('Tendencia', {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW
     },
+    cv_fingerprint: {
+        type: DataTypes.STRING(12),
+        allowNull: true,
+    },
     updated_at: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW

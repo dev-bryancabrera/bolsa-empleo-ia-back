@@ -14,8 +14,12 @@ class TendenciaRepositorySequelize extends TendenciaRepository {
             habilidades_demandadas: tendencia.habilidades_demandadas,
             plataformas_recomendadas: tendencia.plataformas_recomendadas,
             tendencias_sector: tendencia.tendencias_sector,
-            datos_interesantes: tendencia.datos_interesantes,
+            analisis_brecha: tendencia.analisis_brecha || null,
+            datos_interesantes: tendencia.datos_interesantes || null,
+            vacantes_reales: tendencia.vacantes_reales || null,
+            cursos_youtube: tendencia.cursos_youtube || null,
             insights_personalizados: tendencia.insights_personalizados,
+            cv_fingerprint: tendencia.cv_fingerprint || null,
             fecha_generacion: tendencia.fecha_generacion,
             vigente_hasta: tendencia.vigente_hasta,
             created_at: new Date(),
@@ -48,31 +52,50 @@ class TendenciaRepositorySequelize extends TendenciaRepository {
         const tendencia = await TendenciaModel.findOne({
             where: {
                 persona_id: personaId,
-                vigente_hasta: {
-                    [Op.gt]: ahora
-                }
+                vigente_hasta: { [Op.gt]: ahora }
             },
             order: [['created_at', 'DESC']]
         });
         return tendencia ? this._toEntity(tendencia) : null;
     }
 
-    async actualizar(id, datos) {
-        await TendenciaModel.update(datos, {
-            where: { id }
+    async obtenerUltimaPorPersona(personaId) {
+        const tendencia = await TendenciaModel.findOne({
+            where: { persona_id: personaId },
+            order: [['created_at', 'DESC']]
         });
+        return tendencia ? this._toEntity(tendencia) : null;
+    }
+
+    async obtenerPorFingerprint(personaId, fingerprint) {
+        if (!fingerprint) return null;
+        const tendencia = await TendenciaModel.findOne({
+            where: { persona_id: personaId, cv_fingerprint: fingerprint },
+            order: [['created_at', 'DESC']]
+        });
+        return tendencia ? this._toEntity(tendencia) : null;
+    }
+
+    async reactivar(id) {
+        const nuevaVigencia = new Date(Date.now() + 6 * 60 * 60 * 1000);
+        await TendenciaModel.update(
+            { vigente_hasta: nuevaVigencia, updated_at: new Date() },
+            { where: { id } }
+        );
+        return this.obtenerPorId(id);
+    }
+
+    async actualizar(id, datos) {
+        await TendenciaModel.update(datos, { where: { id } });
         return await this.obtenerPorId(id);
     }
 
     async eliminar(id) {
-        const result = await TendenciaModel.destroy({
-            where: { id }
-        });
+        const result = await TendenciaModel.destroy({ where: { id } });
         return result > 0;
     }
 
     async invalidarTendencias(personaId) {
-        // Marcar todas las tendencias como vencidas
         const ayer = new Date();
         ayer.setDate(ayer.getDate() - 1);
 
@@ -81,9 +104,7 @@ class TendenciaRepositorySequelize extends TendenciaRepository {
             {
                 where: {
                     persona_id: personaId,
-                    vigente_hasta: {
-                        [Op.gt]: new Date()
-                    }
+                    vigente_hasta: { [Op.gt]: new Date() }
                 }
             }
         );
@@ -103,8 +124,12 @@ class TendenciaRepositorySequelize extends TendenciaRepository {
             habilidades_demandadas: tendenciaModel.habilidades_demandadas,
             plataformas_recomendadas: tendenciaModel.plataformas_recomendadas,
             tendencias_sector: tendenciaModel.tendencias_sector,
+            analisis_brecha: tendenciaModel.analisis_brecha,
             datos_interesantes: tendenciaModel.datos_interesantes,
+            vacantes_reales: tendenciaModel.vacantes_reales,
+            cursos_youtube: tendenciaModel.cursos_youtube,
             insights_personalizados: tendenciaModel.insights_personalizados,
+            cv_fingerprint: tendenciaModel.cv_fingerprint,
             fecha_generacion: tendenciaModel.fecha_generacion,
             vigente_hasta: tendenciaModel.vigente_hasta,
             created_at: tendenciaModel.created_at,
